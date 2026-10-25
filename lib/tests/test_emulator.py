@@ -139,10 +139,10 @@ async def test_idle_timeout_closes_connection() -> None:
 @pytest.mark.parametrize("encoding", ["latin-1"])
 async def test_name_encoding(encoding: str) -> None:
     async with PJLinkEmulator(encoding=encoding) as emulator:
-        emulator.state.name = "Proyección"
+        emulator.state.name = "Café Projector"
         reader, writer, _ = await _open(emulator)
         writer.write(b"%1NAME ?\r")
         await writer.drain()
         raw = await reader.readuntil(b"\r")
-        assert raw == "%1NAME=Proyección\r".encode(encoding)
+        assert raw == "%1NAME=Café Projector\r".encode(encoding)
         writer.close()

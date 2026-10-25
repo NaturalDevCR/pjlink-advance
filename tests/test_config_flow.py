@@ -194,10 +194,14 @@ async def test_import(hass: HomeAssistant, emulator: PJLinkEmulator) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: emulator.port, CONF_NAME: "Sala"},
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: emulator.port,
+            CONF_NAME: "Conference Room",
+        },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Sala"
+    assert result["title"] == "Conference Room"
     await hass.async_block_till_done()
 
 

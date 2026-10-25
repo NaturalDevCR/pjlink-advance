@@ -74,7 +74,7 @@ async def test_migrate_core_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         version=1,
-        title="Sala",
+        title="Conference Room",
         data={CONF_HOST: "127.0.0.1", CONF_PORT: emulator.port},
     )
     entry.add_to_hass(hass)
@@ -85,7 +85,7 @@ async def test_migrate_core_entry(
     assert entry.data[CONF_ENCODING] == "utf-8"
     assert entry.unique_id == "X8JK0000001"
     # Core used entry_id as the media player unique id.
-    state = hass.states.get("media_player.sala")
+    state = hass.states.get("media_player.conference_room")
     assert state is not None
     await hass.config_entries.async_unload(entry.entry_id)
 

@@ -1,90 +1,90 @@
-# PJLink Advance — Diseño
+# PJLink Advance — Design
 
-Fecha: 2026-10-25
-Estado: borrador para revisión
+Date: 2026-10-25
+Status: approved
 
-## 1. Objetivo
+## 1. Goal
 
-Reemplazar la integración `pjlink` de Home Assistant core con un custom component
-(mismo dominio `pjlink`) que aproveche el protocolo PJLink Class 1 y Class 2
-completo, sea compatible con las config entries existentes y quede preparado
-para un PR upstream posterior.
+Replace the Home Assistant core `pjlink` integration with a custom component
+(same `pjlink` domain) that uses the full PJLink Class 1 and Class 2 protocol,
+stays compatible with existing config entries, and is ready for a later
+upstream PR.
 
-Hardware de referencia para pruebas reales: **Epson EB-L735U** (láser, Class 2).
+Reference hardware for real-world testing: **Epson EB-L735U** (laser, Class 2).
 
-## 2. Situación actual (HA core, rama `dev`)
+## 2. Current state (HA core, `dev` branch)
 
-- Una sola entidad `media_player`: encendido/apagado, mute de audio, selección
-  de entrada.
-- Librería `pypjlink2` síncrona; abre una conexión TCP nueva por cada consulta y
-  comando, sin coordinator.
-- `warm-up` se reporta como `on` y `cooling` como `off`; no hay estados
-  intermedios.
-- Errores detectados comparando strings (`"projector unavailable"`).
-- `CONF_ENCODING` definido pero sin uso.
-- Sin device info (fabricante, modelo, serie, firmware).
-- Config flow `VERSION = 1`, `data = {host, port, password?}`, título = nombre
-  del proyector, `unique_id` de entidad = `entry.entry_id`. Sin `unique_id` de
-  config entry. Sin reauth, reconfigure ni options.
+- A single `media_player` entity: power on/off, audio mute, input selection.
+- Synchronous `pypjlink2` library; it opens a new TCP connection for every
+  query and command, with no coordinator.
+- `warm-up` is reported as `on` and `cooling` as `off`; there are no
+  transitional states.
+- Errors are detected by comparing strings (`"projector unavailable"`).
+- `CONF_ENCODING` is defined but unused.
+- No device info (manufacturer, model, serial, firmware).
+- Config flow `VERSION = 1`, `data = {host, port, password?}`, title = projector
+  name, entity `unique_id` = `entry.entry_id`. No config entry `unique_id`.
+  No reauth, reconfigure or options.
 - `codeowners: []`.
 
-## 3. Decisiones
+## 3. Decisions
 
-| Tema | Decisión | Motivo |
+| Topic | Decision | Reason |
 |---|---|---|
-| Dominio | `pjlink` | Sobrescribe core; el upstream es una mejora de la integración existente, no una duplicada. |
-| Protocolo | Librería propia, async, publicada en PyPI aparte | HA core exige el protocolo fuera de la integración. |
-| ¿Por qué no `aiopjlink`? | Existe (MIT, Class 1+2) pero su roadmap deja pendientes Search (§3.2) y Status Notification (§3.3). | Necesitamos push, discovery, reconexión transparente y emulador bajo nuestro control. Su código sirve de referencia. |
-| Nombre del paquete | `pjlink-advance` (import `pjlink_advance`); libre en PyPI al 2026-10-25 | `aiopjlink` y `aiopjlink2` ya están tomados. |
-| Modelo de actualización | Polling (base) + push UDP Class 2 (opcional) | Push depende de la red (misma subred, host network). |
-| `iot_class` | `local_polling` | El polling siempre funciona; el push es una mejora. |
+| Domain | `pjlink` | Overrides core; upstream becomes an improvement of the existing integration, not a duplicate. |
+| Protocol | Own async library, published to PyPI separately | HA core requires protocol code outside the integration. |
+| Why not `aiopjlink`? | It exists (MIT, Class 1+2) but its roadmap leaves Search (§3.2) and Status Notification (§3.3) pending. | We need push, discovery, transparent reconnect and an emulator under our control. Its code is a useful reference. |
+| Package name | `pjlink-advance` (import `pjlink_advance`); free on PyPI as of 2026-10-25 | `aiopjlink` and `aiopjlink2` are taken. |
+| Update model | Polling (baseline) + Class 2 UDP push (optional) | Push depends on the network (same subnet, host networking). |
+| `iot_class` | `local_polling` | Polling always works; push is an enhancement. |
 
-## 4. Estructura del repositorio
+## 4. Repository layout
 
 ```
 PJLink Advance/
-├── lib/                         # paquete PyPI pjlink-advance
+├── lib/                         # PyPI package pjlink-advance
 │   ├── pyproject.toml
 │   ├── src/pjlink_advance/
 │   │   ├── __init__.py
-│   │   ├── protocol.py          # encode/decode puro, sin I/O
-│   │   ├── client.py            # PJLinkClient (TCP async)
-│   │   ├── listener.py          # UDP: search + notificaciones
-│   │   ├── models.py            # dataclasses y enums
+│   │   ├── protocol.py          # pure encode/decode, no I/O
+│   │   ├── client.py            # PJLinkClient (async TCP)
+│   │   ├── listener.py          # UDP: search + notifications
+│   │   ├── models.py            # dataclasses and enums
 │   │   ├── errors.py
-│   │   └── emulator.py          # proyector falso TCP+UDP para tests
+│   │   └── emulator.py          # fake TCP+UDP projector for tests
 │   └── tests/
-├── custom_components/pjlink/    # integración HA
-├── tests/                       # tests de la integración
+├── custom_components/pjlink/    # HA integration
+├── tests/                       # integration tests
 ├── hacs.json
 └── docs/
 ```
 
-Durante el desarrollo la integración instala la librería desde el repo; al
-publicar se fija `requirements: ["pjlink-advance==X.Y.Z"]`.
+During development the integration installs the library from the repo; on
+release `requirements: ["pjlink-advance==X.Y.Z"]` is pinned.
 
-## 5. Librería `pjlink_advance`
+## 5. Library `pjlink_advance`
 
-Sin dependencias de Home Assistant. Python ≥ 3.13, tipada, `asyncio` puro.
+No Home Assistant dependency. Python ≥ 3.13, typed, plain `asyncio`.
 
-### 5.1 `protocol.py` (puro)
+### 5.1 `protocol.py` (pure)
 
-- Construye peticiones: `%1POWR ?\r`, `%2INPT 31\r`, etc.
-- Parsea respuestas: `%1POWR=1`, `ERR1..ERR4`, `ERRA`.
-- Autenticación: saludo `PJLINK 0` (sin clave) o `PJLINK 1 <random>`;
-  digest = `md5(random + password)` antepuesto al primer comando.
-- Decodifica con el `encoding` configurado (por defecto `utf-8`, fallback
-  `latin-1` para NAME/INF*).
+- Builds requests: `%1POWR ?\r`, `%2INPT 31\r`, etc.
+- Parses responses: `%1POWR=1`, `ERR1..ERR4`, `ERRA`.
+- Authentication: greeting `PJLINK 0` (no password) or `PJLINK 1 <random>`;
+  digest = `md5(random + password)` prepended to the first command.
+- Decodes with the configured `encoding` (default `utf-8`, `latin-1`
+  fallback).
 
 ### 5.2 `client.py` — `PJLinkClient`
 
 - `PJLinkClient(host, port=4352, password=None, encoding="utf-8", timeout=5.0)`.
-- Una conexión TCP persistente protegida por `asyncio.Lock`; los comandos se
-  serializan. El proyector cierra la sesión tras ~30 s de inactividad: el
-  cliente reconecta y reautentica de forma transparente (un reintento).
-- API de alto nivel:
+- One persistent TCP connection guarded by an `asyncio.Lock`; commands are
+  serialized. The projector closes the session after ~30 s of inactivity: the
+  client reconnects and re-authenticates transparently (one retry), and
+  reconnects proactively after 25 s idle.
+- High-level API:
 
-| Clase | Método | Comando |
+| Class | Method | Command |
 |---|---|---|
 | 1 | `get_power()` / `set_power(bool)` | POWR |
 | 1 | `get_input()` / `set_input(InputSource)` / `get_inputs()` | INPT / INST |
@@ -99,177 +99,176 @@ Sin dependencias de Home Assistant. Python ≥ 3.13, tipada, `asyncio` puro.
 | 2 | `get_lamp_model()`, `get_filter_model()` | RLMP, RFIL |
 | 2 | `speaker_volume(up: bool)`, `mic_volume(up: bool)` | SVOL, MVOL |
 | 2 | `get_freeze()` / `set_freeze(bool)` | FREZ |
-| — | `send_raw(command, param, pj_class)` | cualquiera |
+| — | `send_raw(command, param, pj_class)` | any |
 
-- `async fetch_static()` → `DeviceInfo` (name, manufacturer, model, info, class,
-  serial, software, inputs con nombres).
+- `async fetch_static()` → `DeviceInfo` (name, manufacturer, model, info,
+  class, serial, software, inputs with names).
 - `async fetch_state(full: bool)` → `ProjectorState` (power, input, mute,
-  freeze, resoluciones; con `full=True` también errores, lámparas y filtro).
+  freeze, resolutions; `full=True` also reads errors, lamps and filter).
 
-### 5.3 Modelos (`models.py`)
+### 5.3 Models (`models.py`)
 
 - `PowerState`: `OFF`, `ON`, `COOLING`, `WARMING`.
-- `InputSource(type: InputType, index: str)` con `InputType` RGB=1, VIDEO=2,
-  DIGITAL=3, STORAGE=4, NETWORK=5, INTERNAL=6 (Class 2); índice `1-9`
-  (Class 1) o `1-9A-Z` (Class 2).
+- `InputSource(type: InputType, index: str)` with `InputType` RGB=1, VIDEO=2,
+  DIGITAL=3, STORAGE=4, NETWORK=5, INTERNAL=6 (Class 2); index `1-9`
+  (Class 1) or `1-9A-Z` (Class 2).
 - `MuteState(video: bool, audio: bool)`; `MuteTarget`: `VIDEO`=1, `AUDIO`=2,
   `BOTH`=3 (AVMT `11/10`, `21/20`, `31/30`).
-- `ErrorStatus`: `fan`, `lamp`, `temperature`, `cover`, `filter`, `other`, cada
-  uno `OK | WARNING | ERROR`.
-- `Lamp(hours: int, on: bool)`; lista de 1 a 8.
+- `ErrorStatus`: `fan`, `lamp`, `temperature`, `cover`, `filter`, `other`,
+  each `OK | WARNING | ERROR`.
+- `Lamp(hours: int, on: bool)`; a list of 1 to 8.
 - `Resolution(width, height)` | `NO_SIGNAL` | `UNKNOWN`.
 
-### 5.4 Errores (`errors.py`)
+### 5.4 Errors (`errors.py`)
 
-`PJLinkError` base y subclases: `PJLinkConnectionError`, `PJLinkAuthError`
+`PJLinkError` base and subclasses: `PJLinkConnectionError`, `PJLinkAuthError`
 (`ERRA`), `PJLinkUndefinedCommand` (`ERR1`), `PJLinkOutOfParameter` (`ERR2`),
 `PJLinkUnavailableTime` (`ERR3`), `PJLinkProjectorFailure` (`ERR4`),
-`PJLinkProtocolError` (respuesta mal formada).
+`PJLinkProtocolError` (malformed response).
 
-### 5.5 `listener.py` — UDP Class 2
+### 5.5 `listener.py` — Class 2 UDP
 
-- `PJLinkListener`: un socket UDP en el puerto 4352 compartido por todos los
-  proyectores.
-- `async discover(timeout=5)` → envía `%2SRCH` por broadcast y devuelve
-  `[(ip, mac)]` a partir de `%2ACKN=<mac>`.
-- Notificaciones: `%2LKUP`, `%2ERST`, `%2POWR`, `%2INPT`, `%2AVMT`. Las
-  entrega a callbacks registrados por IP de origen.
+- `PJLinkListener`: one UDP socket on port 4352 shared by every projector.
+- `async discover(duration=5)` → broadcasts `%2SRCH` and returns
+  `[(ip, mac)]` from `%2ACKN=<mac>` replies.
+- Notifications: `%2LKUP`, `%2ERST`, `%2POWR`, `%2INPT`, `%2AVMT`, delivered to
+  callbacks registered per source IP.
 
 ### 5.6 `emulator.py`
 
-Proyector falso (TCP + UDP) con estado configurable, clase 1 o 2, clave
-opcional, inyección de errores (`ERR3` durante el calentamiento, desconexiones,
-respuestas lentas) y envío de notificaciones. Lo usan los tests de la librería y
-de la integración, y sirve para desarrollar sin hardware.
+Fake projector (TCP + UDP) with configurable state, class 1 or 2, optional
+password, and fault injection (`ERR3` during warm-up, disconnects, silent
+responses) plus notification sending. Used by the library and integration
+tests, and for development without hardware.
 
-## 6. Integración `custom_components/pjlink`
+## 6. Integration `custom_components/pjlink`
 
 ### 6.1 Config flow
 
-- **user**: host, port (4352), password opcional. Valida conectando y leyendo
-  la información estática.
-- **Búsqueda en red** (Class 2): primer paso del menú "Buscar proyectores" que
-  usa `discover()` y lista los encontrados; "Manual" como alternativa.
-- `unique_id` de la config entry: número de serie (Class 2) o MAC si se conoce;
-  si no hay ninguno, `host:port`.
-- **reauth**: ante `PJLinkAuthError` en tiempo de ejecución.
-- **reconfigure**: cambiar host, puerto o clave sin borrar la entry.
-- **options**: intervalo de sondeo (por defecto 30 s), umbral de horas de lámpara
-  y de filtro para Repairs, activar push.
+- **user**: menu with "Search the network" (Class 2, uses `discover()`) and
+  "Enter the address manually" (host, port 4352, optional password). Both
+  validate by connecting and reading the static information.
+- Config entry `unique_id`: serial number (Class 2), else MAC if known, else
+  `host:port`.
+- **reauth**: on `PJLinkAuthError` at runtime.
+- **reconfigure**: change host, port or password without removing the entry.
+- **options**: polling interval (default 30 s), lamp and filter hour thresholds
+  for repair issues, enable push.
 
-### 6.2 Migración desde core
+### 6.2 Migration from core
 
-- La config flow sube a `VERSION = 2`.
-- `async_migrate_entry` (1 → 2): conserva `data` y título, añade
-  `encoding = "utf-8"` y fija el `unique_id` de la entry en el primer setup
-  exitoso.
-- El `media_player` mantiene `unique_id = entry.entry_id` para no romper
-  automatizaciones ni `entity_id`. Las entidades nuevas usan
-  `f"{entry.entry_id}_{key}"`.
-- La importación desde YAML (`async_step_import`) se mantiene mientras core la
-  tenga (`breaks_in_ha_version 2026.11.0`).
+- The config flow moves to `VERSION = 2`.
+- `async_migrate_entry` (1 → 2): keeps `data` and title, adds
+  `encoding = "utf-8"`; the entry `unique_id` is set on the first successful
+  setup.
+- The `media_player` keeps `unique_id = entry.entry_id` so automations and
+  `entity_id`s keep working. New entities use `f"{entry.entry_id}_{key}"`.
+- YAML import (`async_step_import`) stays while core keeps it.
 
 ### 6.3 Coordinator
 
-- `PJLinkCoordinator(DataUpdateCoordinator[ProjectorState])`, un cliente por
+- `PJLinkCoordinator(DataUpdateCoordinator[ProjectorState])`, one client per
   entry.
-- La información estática se lee en el setup y al pasar de apagado a encendido
-  (las entradas pueden cambiar).
-- Sondeo adaptativo: 5 s durante `WARMING`/`COOLING`; el intervalo configurado
-  en el resto de casos. Errores, lámparas y filtro se leen cada 5 min o cuando
-  llega una notificación `ERST`.
-- `PJLinkUnavailableTime` (`ERR3`) no es un fallo: se conservan los últimos
-  valores y la entidad sigue disponible.
-- `PJLinkConnectionError` → `UpdateFailed` (entidades no disponibles).
-- `PJLinkAuthError` → `ConfigEntryAuthFailed` (dispara reauth).
-- `PJLinkUndefinedCommand` en un comando opcional → se marca como no soportado
-  y su entidad no se crea (o se deja no disponible si ya existe).
-- Con push activo, cada notificación actualiza el estado con
-  `async_set_updated_data` y el sondeo pasa a 5 min como respaldo.
+- Static information is read at setup, and again on an off → on transition if
+  no inputs were listed.
+- Adaptive polling: 5 s during `WARMING`/`COOLING`; the configured interval
+  otherwise. Errors, lamps and filter are read every 5 min or after an `ERST`
+  notification.
+- `PJLinkUnavailableTime` (`ERR3`) is not a failure: the last values are kept
+  and entities stay available.
+- `PJLinkConnectionError` → `UpdateFailed` (entities unavailable).
+- `PJLinkAuthError` → `ConfigEntryAuthFailed` (starts reauth).
+- `PJLinkUndefinedCommand` on probed optional commands → marked unsupported
+  and the entity is not created.
+- With push active, each notification updates the state through
+  `async_set_updated_data` and polling falls back to every 5 min.
+- After each command the coordinator refreshes immediately.
 
-### 6.4 Entidades
+### 6.4 Entities
 
-Todas con `has_entity_name = True`, `translation_key` e iconos en
-`icons.json`. Las de Class 2 solo se crean si `CLSS = 2` y el comando responde.
+All with `has_entity_name = True`, `translation_key` and icons in
+`icons.json`. Class 2 entities are only created when `CLSS = 2` and the command
+answers.
 
-| Plataforma | Entidad | Clase | Notas |
+| Platform | Entity | Class | Notes |
 |---|---|---|---|
-| media_player | Proyector | 1 | on/off, fuente (con nombres INNM si existen), mute de audio; `volume_up`/`volume_down` con Class 2 |
-| sensor | Estado de energía | 1 | enum off/warming/on/cooling |
-| sensor | Horas de lámpara N | 1 | `UnitOfTime.HOURS`, `TOTAL_INCREASING`; una por lámpara (en el Epson láser es la fuente de luz) |
-| sensor | Horas de filtro | 2 | `UnitOfTime.HOURS`, `TOTAL_INCREASING` |
-| sensor | Ventilador / Lámpara / Temperatura / Tapa / Filtro / Otros | 1 | enum ok/warning/error |
-| sensor | Resolución de entrada | 2 | texto `1920x1200`, `no_signal` |
-| sensor | Resolución recomendada | 2 | diagnóstico, deshabilitada por defecto |
-| sensor | Modelo de lámpara / filtro de repuesto | 2 | diagnóstico |
-| binary_sensor | Problema | 1 | `PROBLEM`, `on` si alguna categoría ERST no está en ok |
-| switch | Video mute (pantalla en negro) | 1 | AVMT 11/10 |
-| switch | Congelar imagen | 2 | FREZ |
-| button | Micrófono volumen +/− | 2 | deshabilitados por defecto |
+| media_player | Projector | 1 | on/off, source (with INNM names when available), audio mute; `volume_up`/`volume_down` on Class 2 |
+| sensor | Power status | 1 | enum off/warming/on/cooling |
+| sensor | Lamp N hours | 1 | `UnitOfTime.HOURS`, `TOTAL_INCREASING`; one per lamp (on the laser Epson it is the light source) |
+| sensor | Filter hours | 2 | `UnitOfTime.HOURS`, `TOTAL_INCREASING` |
+| sensor | Fan / Lamp / Temperature / Cover / Filter / Other status | 1 | enum ok/warning/error |
+| sensor | Input resolution | 2 | text `1920x1200`, `no_signal` |
+| sensor | Recommended resolution | 2 | diagnostic, disabled by default |
+| sensor | Replacement lamp / filter | 2 | diagnostic |
+| binary_sensor | Problem | 1 | `PROBLEM`, `on` if any ERST category is not ok |
+| switch | Video mute (blank screen) | 1 | AVMT 11/10 |
+| switch | Freeze image | 2 | FREZ |
+| button | Microphone volume +/− | 2 | disabled by default |
 
-Device info: fabricante (INF1), modelo (INF2), `serial_number` (SNUM),
-`sw_version` (SVER), nombre (NAME), conexión MAC si se conoce.
+Device info: manufacturer (INF1), model (INF2), `serial_number` (SNUM),
+`sw_version` (SVER), name (entry title), MAC connection when known.
 
-### 6.5 Acciones
+### 6.5 Actions
 
-- `pjlink.send_command`: `command`, `parameter`, `pj_class` (1/2). Devuelve la
-  respuesta (`SupportsResponse.OPTIONAL`). Para funciones del fabricante no
-  cubiertas.
+- `pjlink.send_command`: `config_entry_id`, `command`, `parameter`,
+  `pj_class` (1/2). Returns the response (`SupportsResponse.OPTIONAL`). For
+  vendor features not covered elsewhere.
 
-### 6.6 Repairs
+### 6.6 Repair issues
 
-- Horas de lámpara ≥ umbral → aviso con el modelo de repuesto si hay RLMP.
-- Horas de filtro ≥ umbral → aviso con RFIL.
-- `ERR4` o una categoría ERST en `ERROR` → aviso hasta que se resuelva.
-- Los avisos se borran solos cuando la condición desaparece.
+- Lamp hours ≥ threshold → warning, with the replacement model if RLMP has one.
+- Filter hours ≥ threshold → warning, with RFIL.
+- Any ERST category in `ERROR` → error issue until it clears.
+- Issues are removed automatically when the condition goes away, and when the
+  entry is removed.
 
-### 6.7 Diagnóstico y traducciones
+### 6.7 Diagnostics and translations
 
-- `diagnostics.py`: información estática, último estado y opciones; la clave
-  queda redactada.
+- `diagnostics.py`: static information, last state and options; password,
+  serial and unique id redacted.
 - `strings.json` + `translations/en.json` + `translations/es.json`.
-- Comandos fallidos → `HomeAssistantError` con `translation_key`.
+- Failed commands → `HomeAssistantError` with a `translation_key`.
 
-## 7. Notas del Epson EB-L735U (a verificar en hardware)
+## 7. Epson EB-L735U notes (to verify on hardware)
 
-- Para responder en standby necesita activar la comunicación en espera
-  (opción tipo "Standby Mode: Communication On"; el nombre exacto depende del
-  menú/firmware). Si no, se ve no disponible cuando está apagado.
-- Es láser: `LAMP` devuelve las horas de la fuente de luz y no aplica
-  reemplazo de lámpara (RLMP vacío o `ERR1`).
-- Responde `ERR3` en varios comandos durante el calentamiento.
-- Comprobar qué comandos Class 2 soporta: INNM, IRES, FREZ, FILT, SVOL, y si
-  envía notificaciones.
-- Epson también tiene ESC/VP.net (TCP 3629) con funciones extra (modo de
-  imagen, lente). **Fuera de alcance** en esta versión; posible integración
-  aparte.
+- To answer in standby it needs standby communication enabled (an option like
+  "Standby Mode: Communication On"; the exact name depends on the
+  menu/firmware). Otherwise it shows as unavailable while off.
+- It is a laser projector: `LAMP` returns light source hours and lamp
+  replacement does not apply (empty RLMP or `ERR1`).
+- It answers `ERR3` to several commands during warm-up.
+- Check which Class 2 commands it supports: INNM, IRES, FREZ, FILT, SVOL, and
+  whether it sends notifications.
+- Epson also offers ESC/VP.net (TCP 3629) with extra features (picture mode,
+  lens). **Out of scope** for this version; possibly a separate integration.
 
-## 8. Pruebas
+## 8. Testing
 
-- Librería: `pytest` + `pytest-asyncio`. Tests unitarios del parser con
-  vectores de la especificación y tests de integración contra el emulador:
-  auth, reconexión, timeouts, ERR1–ERR4, push y discovery.
-- Integración: `pytest-homeassistant-custom-component` con el emulador como
-  fixture: config flow (user, búsqueda, reauth, reconfigure, options),
-  migración v1→v2 con una entry real de core, entidades por clase, Repairs y
-  diagnóstico.
-- Manual: checklist en el Epson L735U, incluido push con HA en host network.
-- CI: GitHub Actions con ruff, mypy, pytest y validación de HACS y hassfest.
+- Library: `pytest` + `pytest-asyncio`. Unit tests for the codec with protocol
+  vectors and integration tests against the emulator: auth, reconnect,
+  timeouts, ERR1–ERR4, push and discovery.
+- Integration: `pytest-homeassistant-custom-component` with the emulator as a
+  fixture: config flow (user, search, reauth, reconfigure, options), v1→v2
+  migration with a core-shaped entry, entities per class, repair issues and
+  diagnostics.
+- Manual: checklist on the Epson L735U, including push with HA on host
+  networking.
+- CI: GitHub Actions with ruff, pytest, hassfest and HACS validation.
 
-## 9. Fases
+## 9. Phases
 
-1. **Librería + emulador**: protocol, client, models, errors, emulator y tests
-   de Class 1 y 2 (sin UDP).
-2. **Integración base**: config flow, migración, coordinator, media_player,
-   sensores, switch de video mute, device info, diagnóstico y traducciones.
-3. **Extras Class 2**: nombres de entrada, freeze, volumen, resoluciones,
-   repuestos, botones de micrófono, acción `send_command` y Repairs.
-4. **UDP**: discovery en el config flow y notificaciones push.
-5. **Distribución**: HACS, README, CI, publicación en PyPI y preparación del PR
-   upstream (por partes: primero la librería + paridad, luego plataformas).
+1. **Library + emulator**: protocol, client, models, errors, emulator and
+   Class 1 and 2 tests (no UDP).
+2. **Base integration**: config flow, migration, coordinator, media_player,
+   sensors, video mute switch, device info, diagnostics and translations.
+3. **Class 2 extras**: input names, freeze, volume, resolutions, replacement
+   parts, microphone buttons, `send_command` action and repair issues.
+4. **UDP**: discovery in the config flow and push notifications.
+5. **Distribution**: HACS, README, CI, PyPI publishing and upstream PR prep (in
+   steps: first the library + parity, then platforms).
 
-## 10. Fuera de alcance
+## 10. Out of scope
 
-- ESC/VP.net u otros protocolos propietarios.
-- Control de lente y obturador (no forman parte de PJLink).
-- Escenas o tarjetas Lovelace personalizadas.
+- ESC/VP.net or other proprietary protocols.
+- Lens and shutter control (not part of PJLink).
+- Custom scenes or Lovelace cards.

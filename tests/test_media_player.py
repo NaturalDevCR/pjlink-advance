@@ -121,13 +121,13 @@ async def test_class1_sources_and_features(hass: HomeAssistant) -> None:
         entry = MockConfigEntry(
             domain=DOMAIN,
             version=2,
-            title="Viejo",
+            title="Legacy",
             data={"host": "127.0.0.1", "port": emulator.port, "encoding": "utf-8"},
         )
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        state = hass.states.get("media_player.viejo")
+        state = hass.states.get("media_player.legacy")
         assert state.attributes[ATTR_INPUT_SOURCE_LIST] == [
             "RGB 1",
             "DIGITAL 1",

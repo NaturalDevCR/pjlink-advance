@@ -1,95 +1,95 @@
 # PJLink Advance
 
-Integración `pjlink` para Home Assistant que **reemplaza** a la de core y usa
-todo el protocolo PJLink Class 1 y Class 2. Incluye la librería asíncrona
-[`pjlink-advance`](lib/) con un emulador de proyector para probar sin hardware.
+A `pjlink` integration for Home Assistant that **replaces** the core one and
+uses the full PJLink Class 1 and Class 2 protocol. It ships with the
+[`pjlink-advance`](lib/) asyncio library, which includes a projector emulator
+for testing without hardware.
 
-*English summary below.*
+## What it adds over the core integration
 
-## Qué agrega frente a la integración de core
-
-| Función | Core | PJLink Advance |
+| Feature | Core | PJLink Advance |
 |---|---|---|
-| Encendido, entradas, mute de audio | ✅ | ✅ |
-| Estados intermedios (calentando / enfriando) | ❌ | ✅ sensor de estado de energía |
-| Nombres reales de entradas (Class 2) | ❌ | ✅ "HDMI1" en vez de "DIGITAL 1" |
-| Video mute (pantalla en negro) | ❌ | ✅ switch |
-| Congelar imagen (Class 2) | ❌ | ✅ switch |
-| Volumen +/− del parlante (Class 2) | ❌ | ✅ en el media player |
-| Volumen del micrófono (Class 2) | ❌ | ✅ botones (deshabilitados por defecto) |
-| Horas de lámpara / fuente de luz | ❌ | ✅ un sensor por lámpara |
-| Horas de filtro (Class 2) | ❌ | ✅ |
-| Alarmas por categoría (ventilador, lámpara, temperatura, tapa, filtro, otros) | ❌ | ✅ sensores + binary_sensor "Problema" |
-| Resolución de entrada y recomendada (Class 2) | ❌ | ✅ |
-| Repuestos de lámpara y filtro (Class 2) | ❌ | ✅ |
-| Ficha del dispositivo (fabricante, modelo, serie, firmware, MAC) | ❌ | ✅ |
-| Búsqueda en la red (Class 2) | ❌ | ✅ en el config flow |
-| Notificaciones push por UDP (Class 2) | ❌ | ✅ opcional |
-| Reauth, reconfigure, opciones | ❌ | ✅ |
-| Avisos en Repairs (lámpara, filtro, errores) | ❌ | ✅ |
-| Acción `pjlink.send_command` con respuesta | ❌ | ✅ |
-| Diagnóstico descargable | ❌ | ✅ |
-| Conexión persistente con reconexión automática | ❌ (una conexión por consulta) | ✅ |
-| Sondeo adaptativo (5 s durante calentamiento) | ❌ | ✅ |
-| Traducciones | EN | EN + ES |
+| Power, inputs, audio mute | ✅ | ✅ |
+| Transitional states (warming up / cooling down) | ❌ | ✅ power status sensor |
+| Real input names (Class 2) | ❌ | ✅ "HDMI1" instead of "DIGITAL 1" |
+| Video mute (blank screen) | ❌ | ✅ switch |
+| Freeze image (Class 2) | ❌ | ✅ switch |
+| Speaker volume +/− (Class 2) | ❌ | ✅ on the media player |
+| Microphone volume (Class 2) | ❌ | ✅ buttons (disabled by default) |
+| Lamp / light source hours | ❌ | ✅ one sensor per lamp |
+| Filter hours (Class 2) | ❌ | ✅ |
+| Per-category alarms (fan, lamp, temperature, cover, filter, other) | ❌ | ✅ sensors + "Problem" binary sensor |
+| Input and recommended resolution (Class 2) | ❌ | ✅ |
+| Replacement lamp and filter models (Class 2) | ❌ | ✅ |
+| Device info (manufacturer, model, serial, firmware, MAC) | ❌ | ✅ |
+| Network search (Class 2) | ❌ | ✅ in the config flow |
+| UDP push notifications (Class 2) | ❌ | ✅ optional |
+| Reauth, reconfigure, options | ❌ | ✅ |
+| Repair issues (lamp, filter, errors) | ❌ | ✅ |
+| `pjlink.send_command` action with response | ❌ | ✅ |
+| Downloadable diagnostics | ❌ | ✅ |
+| Persistent connection with automatic reconnect | ❌ (one connection per query) | ✅ |
+| Adaptive polling (5 s while warming up) | ❌ | ✅ |
+| Translations | EN | EN + ES |
 
-Las entidades de Class 2 solo se crean si el proyector es Class 2 y responde al
-comando (si contesta `ERR1`, la entidad no aparece).
+Class 2 entities are only created when the projector is Class 2 and answers
+the command (if it replies `ERR1`, the entity is skipped).
 
-## Compatibilidad con la integración de core
+## Compatibility with the core integration
 
-- Usa el mismo dominio `pjlink`; HA carga esta versión en lugar de la de core.
-- Las entradas existentes (versión 1) se migran solas a la versión 2.
-- El `media_player` conserva el mismo `unique_id`, así que sus `entity_id`
-  y automatizaciones siguen funcionando.
-- La configuración YAML (`media_player: - platform: pjlink`) se sigue
-  importando como en core.
+- It uses the same `pjlink` domain, so Home Assistant loads it instead of the
+  core integration.
+- Existing entries (version 1) are migrated to version 2 automatically.
+- The `media_player` keeps the same `unique_id`, so its `entity_id` and your
+  automations keep working.
+- YAML configuration (`media_player: - platform: pjlink`) is still imported,
+  as in core.
 
-## Instalación
+## Installation
 
-> **Requisito:** Home Assistant instala `pjlink-advance` desde PyPI. Hay que
-> publicar la librería antes de instalar la integración (ver
-> [Publicar la librería](#publicar-la-librería)).
+### HACS (custom repository)
 
-### HACS (repositorio personalizado)
+1. HACS → Integrations → ⋮ → Custom repositories →
+   `https://github.com/NaturalDevCR/pjlink-advance`, category *Integration*.
+2. Install **PJLink Advance** and restart Home Assistant.
+3. Settings → Devices & services → Add integration → **PJLink**.
 
-1. HACS → Integraciones → ⋮ → Repositorios personalizados →
-   `https://github.com/NaturalDevCR/pjlink-advance`, categoría *Integration*.
-2. Instala **PJLink Advance** y reinicia Home Assistant.
-3. Ajustes → Dispositivos y servicios → Añadir integración → **PJLink**.
+Because it overrides a core domain, this integration can only be added to HACS
+as a custom repository, not from the default list.
 
 ### Manual
 
-Copia `custom_components/pjlink` a `config/custom_components/pjlink` y reinicia.
+Copy `custom_components/pjlink` to `config/custom_components/pjlink` and
+restart.
 
-## Opciones
+## Options
 
-| Opción | Por defecto | Descripción |
+| Option | Default | Description |
 |---|---|---|
-| Intervalo de sondeo | 30 s | En reposo. Calentamiento/enfriamiento siempre cada 5 s. |
-| Aviso de lámpara | 20000 h | Crea un aviso en Repairs. 0 lo desactiva. |
-| Aviso de filtro | 0 (desactivado) | Igual que el anterior. |
-| Notificaciones Class 2 | desactivado | Escucha en UDP 4352. Con push activo el sondeo baja a cada 5 min. |
+| Polling interval | 30 s | While idle. Warm-up and cool-down are always polled every 5 s. |
+| Lamp warning | 20000 h | Creates a repair issue. 0 disables it. |
+| Filter warning | 0 (disabled) | Same as above. |
+| Class 2 notifications | off | Listens on UDP 4352. With push enabled, polling drops to every 5 min. |
 
-Las notificaciones push y la búsqueda necesitan que HA y el proyector estén en
-la misma subred y que HA reciba UDP en el puerto 4352 (HA OS, o Docker con
-`network_mode: host`). Si el puerto está ocupado, la integración sigue
-funcionando solo con sondeo.
+Push notifications and network search need Home Assistant and the projector on
+the same subnet, and Home Assistant must receive UDP on port 4352 (Home
+Assistant OS, or Docker with `network_mode: host`). If the port is busy, the
+integration keeps working with polling only.
 
-## Notas para Epson EB-L735U
+## Notes for the Epson EB-L735U
 
-- Activa la comunicación en espera (opción tipo *Standby Mode:
-  Communication On* en el menú de red). Si no, el proyector no responde cuando
-  está apagado y aparece como no disponible.
-- Es láser: "Horas de lámpara" son las horas de la fuente de luz y no hay
-  modelo de lámpara de repuesto.
-- Durante el calentamiento responde `ERR3` a varios comandos; la integración
-  conserva los últimos valores mientras tanto.
-- Funciones propias de Epson (modo de imagen, lente) usan ESC/VP.net y están
-  fuera de alcance; puedes probarlas con `pjlink.send_command` solo si el
-  proyector las expone por PJLink.
+- Enable standby communication (an option like *Standby Mode: Communication
+  On* in the network menu). Otherwise the projector does not answer while off
+  and shows as unavailable.
+- It is a laser projector: "Lamp hours" are light source hours and there is
+  no replacement lamp model.
+- During warm-up it answers `ERR3` to several commands; the integration keeps
+  the last known values meanwhile.
+- Epson-specific features (picture mode, lens) use ESC/VP.net and are out of
+  scope. You can try `pjlink.send_command` only if the projector exposes them
+  over PJLink.
 
-## Ejemplo: `pjlink.send_command`
+## Example: `pjlink.send_command`
 
 ```yaml
 action: pjlink.send_command
@@ -97,48 +97,33 @@ data:
   config_entry_id: 0123456789abcdef
   command: SVER
   pj_class: 2
-response_variable: respuesta
+response_variable: answer
 ```
 
-## Desarrollo
+## Development
 
 ```bash
-uv sync --python 3.14            # entorno de la integración (HA + tests)
-uv run pytest -q                 # tests de la integración
-cd lib && uv run --extra test pytest -q   # tests de la librería
+uv sync --python 3.14                      # integration environment (HA + tests)
+uv run pytest -q                           # integration tests
+cd lib && uv run --extra test pytest -q    # library tests
 ```
 
-Emulador de proyector (Class 2, TCP y UDP en 4352):
+Projector emulator (Class 2, TCP and UDP on 4352):
 
 ```bash
-cd lib && uv run python -m pjlink_advance.emulator --port 4352 --password secreto
+cd lib && uv run python -m pjlink_advance.emulator --port 4352 --password secret
 ```
 
-## Publicar la librería
+## Releasing
 
-```bash
-cd lib && uv build && uv publish
-```
-
-Después crea un tag `v0.1.0` del repositorio para HACS. Si cambias la versión
-de la librería, actualiza `requirements` en
+Publishing a GitHub release runs `.github/workflows/publish.yml`, which builds
+the library and uploads it to PyPI with trusted publishing. When the library
+version changes, update `requirements` in
 `custom_components/pjlink/manifest.json`.
 
-## Hacia upstream (HA core)
+## Towards upstream (Home Assistant core)
 
-La librería ya está separada como exige core. Un PR futuro debería ir por
-partes: primero cambiar `pypjlink2` por `pjlink-advance` con paridad de
-funciones, luego plataformas nuevas (sensores, switches, etc.).
-
----
-
-## English summary
-
-`pjlink` custom integration that replaces the Home Assistant core one. It adds
-Class 2 support (input names, freeze, volume, filter hours, resolutions,
-replacement parts, network search, UDP status notifications), lamp hours,
-per-category error sensors, video mute, device info, reauth/reconfigure/options
-flows, repair issues, diagnostics and a `pjlink.send_command` action. Existing
-core entries migrate automatically and the media player keeps its unique id.
-Protocol code lives in the separate `pjlink-advance` library (with a projector
-emulator), which must be published to PyPI before installing the integration.
+The protocol code already lives in a separate library, as core requires. A
+future PR should land in steps: first replace `pypjlink2` with
+`pjlink-advance` at feature parity, then add the new platforms (sensors,
+switches, and so on).

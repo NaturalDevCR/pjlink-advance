@@ -232,9 +232,9 @@ async def test_fetch_state_tolerates_unavailable(
 
 async def test_latin1_fallback() -> None:
     async with PJLinkEmulator(encoding="latin-1") as emulator:
-        emulator.state.name = "Proyección"
+        emulator.state.name = "Café Projector"
         async with PJLinkClient("127.0.0.1", emulator.port) as client:
-            assert await client.get_name() == "Proyección"
+            assert await client.get_name() == "Café Projector"
 
 
 async def test_concurrent_commands_are_serialized(

@@ -88,19 +88,19 @@ async def test_class1_has_no_class2_sensors(hass: HomeAssistant) -> None:
         entry = MockConfigEntry(
             domain=DOMAIN,
             version=2,
-            title="Viejo",
+            title="Legacy",
             data={"host": "127.0.0.1", "port": emulator.port, "encoding": "utf-8"},
         )
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert hass.states.get("sensor.viejo_power_status") is not None
-        assert hass.states.get("sensor.viejo_lamp_hours") is not None
-        assert hass.states.get("sensor.viejo_filter_hours") is None
-        assert hass.states.get("sensor.viejo_input_resolution") is None
-        assert hass.states.get("switch.viejo_freeze_image") is None
-        assert hass.states.get("button.viejo_microphone_volume_up") is None
-        assert hass.states.get("switch.viejo_video_mute") is not None
+        assert hass.states.get("sensor.legacy_power_status") is not None
+        assert hass.states.get("sensor.legacy_lamp_hours") is not None
+        assert hass.states.get("sensor.legacy_filter_hours") is None
+        assert hass.states.get("sensor.legacy_input_resolution") is None
+        assert hass.states.get("switch.legacy_freeze_image") is None
+        assert hass.states.get("button.legacy_microphone_volume_up") is None
+        assert hass.states.get("switch.legacy_video_mute") is not None
         await hass.config_entries.async_unload(entry.entry_id)
 
 
@@ -111,13 +111,13 @@ async def test_unsupported_class2_command_skips_entity(hass: HomeAssistant) -> N
         entry = MockConfigEntry(
             domain=DOMAIN,
             version=2,
-            title="Parcial",
+            title="Partial",
             data={"host": "127.0.0.1", "port": emulator.port, "encoding": "utf-8"},
         )
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert hass.states.get("sensor.parcial_filter_hours") is None
-        assert hass.states.get("switch.parcial_freeze_image") is None
-        assert hass.states.get("sensor.parcial_input_resolution") is not None
+        assert hass.states.get("sensor.partial_filter_hours") is None
+        assert hass.states.get("switch.partial_freeze_image") is None
+        assert hass.states.get("sensor.partial_input_resolution") is not None
         await hass.config_entries.async_unload(entry.entry_id)
