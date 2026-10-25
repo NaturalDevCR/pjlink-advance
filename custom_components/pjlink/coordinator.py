@@ -183,7 +183,8 @@ class PJLinkCoordinator(DataUpdateCoordinator[ProjectorState]):
                 translation_key="command_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        await self.async_request_refresh()
+        # Refresh right away (not debounced) so the UI follows each command.
+        await self.async_refresh()
 
     @callback
     def handle_notification(self, command: str, value: str) -> None:
