@@ -4,13 +4,12 @@ from __future__ import annotations
 
 import logging
 
-from pjlink_advance import PJLinkClient
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from pjlink_advance import PJLinkClient
 
 from .const import (
     CONF_ENCODING,
@@ -21,8 +20,8 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import PJLinkCoordinator
-from .push import async_enable_push
 from .issues import async_delete_issues, async_track_issues
+from .push import async_enable_push
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,9 +64,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: PJLinkConfigEntry) -> bo
 
     _async_set_unique_id(hass, entry, coordinator)
 
-    if entry.options.get(CONF_PUSH) and coordinator.pj_class >= 2:
-        if unsubscribe := await async_enable_push(hass, coordinator):
-            entry.async_on_unload(unsubscribe)
+    if (
+        entry.options.get(CONF_PUSH)
+        and coordinator.pj_class >= 2
+        and (unsubscribe := await async_enable_push(hass, coordinator))
+    ):
+        entry.async_on_unload(unsubscribe)
 
     entry.async_on_unload(async_track_issues(hass, coordinator))
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))

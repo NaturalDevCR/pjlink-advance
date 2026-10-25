@@ -47,6 +47,7 @@ def async_track_issues(
 def _set_issue(
     hass: HomeAssistant,
     kind: str,
+    *,
     entry_id: str,
     active: bool,
     placeholders: dict[str, str],
@@ -82,9 +83,9 @@ def _async_check(hass: HomeAssistant, coordinator: PJLinkCoordinator) -> None:
         _set_issue(
             hass,
             "lamp_hours",
-            entry.entry_id,
-            bool(lamp_limit) and hours >= lamp_limit,
-            {
+            entry_id=entry.entry_id,
+            active=bool(lamp_limit) and hours >= lamp_limit,
+            placeholders={
                 "name": name,
                 "hours": str(hours),
                 "limit": str(lamp_limit),
@@ -97,9 +98,9 @@ def _async_check(hass: HomeAssistant, coordinator: PJLinkCoordinator) -> None:
         _set_issue(
             hass,
             "filter_hours",
-            entry.entry_id,
-            bool(filter_limit) and state.filter_hours >= filter_limit,
-            {
+            entry_id=entry.entry_id,
+            active=bool(filter_limit) and state.filter_hours >= filter_limit,
+            placeholders={
                 "name": name,
                 "hours": str(state.filter_hours),
                 "limit": str(filter_limit),
@@ -116,8 +117,8 @@ def _async_check(hass: HomeAssistant, coordinator: PJLinkCoordinator) -> None:
         _set_issue(
             hass,
             "projector_error",
-            entry.entry_id,
-            bool(failing),
-            {"name": name, "categories": ", ".join(failing)},
-            ir.IssueSeverity.ERROR,
+            entry_id=entry.entry_id,
+            active=bool(failing),
+            placeholders={"name": name, "categories": ", ".join(failing)},
+            severity=ir.IssueSeverity.ERROR,
         )

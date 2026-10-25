@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import pytest
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from pjlink_advance import NO_SIGNAL, ErrorLevel, Lamp, PowerState
 from pjlink_advance.emulator import EmulatorState, PJLinkEmulator
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.pjlink.const import DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
 PREFIX = "sensor.eb_l735u_"
 
@@ -49,7 +49,7 @@ async def test_values_follow_projector(
     emulator.state.errors = emulator.state.errors.replace(
         temperature=ErrorLevel.WARNING
     )
-    coordinator._force_full = True  # noqa: SLF001
+    coordinator._force_full = True
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

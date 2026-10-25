@@ -7,13 +7,6 @@ from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
-from pjlink_advance import (
-    DeviceInfo,
-    PJLinkAuthError,
-    PJLinkClient,
-    PJLinkError,
-)
-
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -27,6 +20,12 @@ from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
+)
+from pjlink_advance import (
+    DeviceInfo,
+    PJLinkAuthError,
+    PJLinkClient,
+    PJLinkError,
 )
 
 from .const import (
@@ -88,7 +87,9 @@ async def _try_validate(
         return None, "unknown"
 
 
-def _entry_data(user_input: Mapping[str, Any], mac: str | None = None) -> dict[str, Any]:
+def _entry_data(
+    user_input: Mapping[str, Any], mac: str | None = None
+) -> dict[str, Any]:
     data: dict[str, Any] = {
         CONF_HOST: user_input[CONF_HOST],
         CONF_PORT: user_input.get(CONF_PORT, DEFAULT_PORT),

@@ -5,6 +5,10 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import pytest
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from pjlink_advance.emulator import PJLinkEmulator
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -17,11 +21,6 @@ from custom_components.pjlink.const import (
     CONF_SCAN_INTERVAL,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-
 from custom_components.pjlink.push import async_search
 
 from .conftest import entry_data

@@ -7,11 +7,10 @@ import socket
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pjlink_advance import PJLinkListener
-
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.hass_dict import HassKey
+from pjlink_advance import PJLinkListener
 
 from . import const
 from .coordinator import PJLinkCoordinator
@@ -62,7 +61,9 @@ async def async_search(hass: HomeAssistant) -> list[tuple[str, str]]:
         listener = await _async_acquire(hass)
     except OSError:
         # Port 4352 is busy; fall back to an ephemeral port.
-        _LOGGER.debug("UDP port %s busy, searching from ephemeral port", const.PUSH_PORT)
+        _LOGGER.debug(
+            "UDP port %s busy, searching from ephemeral port", const.PUSH_PORT
+        )
         listener = PJLinkListener(port=0)
         await listener.start()
         try:

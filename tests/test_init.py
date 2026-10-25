@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 from pjlink_advance import PowerState
 from pjlink_advance.emulator import PJLinkEmulator
 from pytest_homeassistant_custom_component.common import (
@@ -16,10 +20,6 @@ from custom_components.pjlink.const import (
     DOMAIN,
     TRANSITION_INTERVAL,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
 from .conftest import entry_data
 
@@ -67,7 +67,9 @@ async def test_wrong_password_starts_reauth(hass: HomeAssistant) -> None:
         assert [flow["context"]["source"] for flow in flows] == [SOURCE_REAUTH]
 
 
-async def test_migrate_core_entry(hass: HomeAssistant, emulator: PJLinkEmulator) -> None:
+async def test_migrate_core_entry(
+    hass: HomeAssistant, emulator: PJLinkEmulator
+) -> None:
     """A version 1 entry created by the core integration keeps working."""
     entry = MockConfigEntry(
         domain=DOMAIN,

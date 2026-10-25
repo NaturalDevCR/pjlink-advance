@@ -3,18 +3,15 @@
 from __future__ import annotations
 
 import pytest
-from pjlink_advance import InputSource, InputType, PowerState
-from pjlink_advance.emulator import PJLinkEmulator
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
-from custom_components.pjlink.const import DOMAIN
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_MUTED,
-    DOMAIN as MP_DOMAIN,
     SERVICE_SELECT_SOURCE,
     MediaPlayerEntityFeature,
+)
+from homeassistant.components.media_player import (
+    DOMAIN as MP_DOMAIN,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -30,6 +27,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from pjlink_advance import InputSource, InputType, PowerState
+from pjlink_advance.emulator import PJLinkEmulator
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from custom_components.pjlink.const import DOMAIN
 
 ENTITY_ID = "media_player.eb_l735u"
 
@@ -52,7 +54,9 @@ async def test_off_state(hass: HomeAssistant) -> None:
         "HDMI2",
         "LAN",
     ]
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] & MediaPlayerEntityFeature.VOLUME_STEP
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES] & MediaPlayerEntityFeature.VOLUME_STEP
+    )
 
 
 async def test_unique_id_matches_core(

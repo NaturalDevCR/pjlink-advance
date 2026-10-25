@@ -5,8 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import voluptuous as vol
-from pjlink_advance import PJLinkError
-
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import (
     HomeAssistant,
@@ -17,6 +15,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from pjlink_advance import PJLinkError
 
 from .const import DOMAIN
 

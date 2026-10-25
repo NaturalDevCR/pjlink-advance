@@ -5,10 +5,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import voluptuous as vol
-from pjlink_advance import DeviceInfo, InputSource, MuteTarget
-
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
+)
+from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -16,14 +16,17 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from pjlink_advance import DeviceInfo, InputSource, MuteTarget
 
 from .const import CONF_ENCODING, DEFAULT_ENCODING, DEFAULT_PORT, DOMAIN
 from .coordinator import PJLinkCoordinator

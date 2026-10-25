@@ -6,11 +6,10 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from pjlink_advance import MuteTarget, PowerState
-
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from pjlink_advance import MuteTarget, PowerState
 
 from .coordinator import PJLinkCoordinator
 from .entity import PJLinkEntity

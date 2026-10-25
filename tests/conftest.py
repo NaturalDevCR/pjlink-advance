@@ -7,12 +7,12 @@ from typing import Any
 from unittest.mock import PropertyMock, patch
 
 import pytest
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 from pjlink_advance.emulator import PJLinkEmulator
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.pjlink.const import CONF_ENCODING, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture(autouse=True)

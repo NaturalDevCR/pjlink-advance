@@ -5,11 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from pjlink_advance import PowerState
-
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from pjlink_advance import PowerState
 
 from .coordinator import PJLinkCoordinator
 from .entity import PJLinkEntity

@@ -9,6 +9,9 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from pjlink_advance import (
     DeviceInfo,
     PJLinkAuthError,
@@ -18,12 +21,8 @@ from pjlink_advance import (
     PJLinkUndefinedCommand,
     PowerState,
     ProjectorState,
+    protocol,
 )
-from pjlink_advance import protocol
-
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_SCAN_INTERVAL,
@@ -118,7 +117,10 @@ class PJLinkCoordinator(DataUpdateCoordinator[ProjectorState]):
         full = self._force_full or now - self._last_full >= SLOW_INTERVAL
         try:
             state = await self.client.fetch_state(full=full, pj_class=self.pj_class)
-            if state.power.is_on and not self.device.inputs:
+            just_turned_on = state.power.is_on and (
+                self.data is None or not self.data.power.is_on
+            )
+            if just_turned_on and not self.device.inputs:
                 # Some projectors only list inputs once they are on.
                 self.device = await self.client.fetch_static()
         except PJLinkAuthError as err:

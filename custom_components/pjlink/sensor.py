@@ -6,15 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from pjlink_advance import (
-    ERROR_CATEGORIES,
-    NO_SIGNAL,
-    ErrorLevel,
-    PowerState,
-    Resolution,
-    ResolutionValue,
-)
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -25,6 +16,14 @@ from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from pjlink_advance import (
+    ERROR_CATEGORIES,
+    NO_SIGNAL,
+    ErrorLevel,
+    PowerState,
+    Resolution,
+    ResolutionValue,
+)
 
 from .coordinator import PJLinkCoordinator
 from .entity import PJLinkEntity

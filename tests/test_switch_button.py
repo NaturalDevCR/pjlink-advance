@@ -3,11 +3,8 @@
 from __future__ import annotations
 
 import pytest
-from pjlink_advance import PowerState
-from pjlink_advance.emulator import PJLinkEmulator
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.button import SERVICE_PRESS
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -19,6 +16,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from pjlink_advance import PowerState
+from pjlink_advance.emulator import PJLinkEmulator
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 VIDEO_MUTE = "switch.eb_l735u_video_mute"
 FREEZE = "switch.eb_l735u_freeze_image"
