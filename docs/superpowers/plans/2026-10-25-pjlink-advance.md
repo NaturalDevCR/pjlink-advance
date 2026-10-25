@@ -99,11 +99,11 @@ README.md
   - `DeviceInfo(dataclass)`: `name, manufacturer, model, other_info: str`, `pj_class: int`, `serial: str | None`, `software_version: str | None`, `inputs: list[InputSource]`, `input_names: dict[str, str]` (code → name), `lamp_model: str | None`, `filter_model: str | None`, `recommended_resolution: ResolutionValue`.
   - `ProjectorState(dataclass)`: `power: PowerState`, `input: InputSource | None`, `mute: MuteState | None`, `freeze: bool | None`, `input_resolution: ResolutionValue`, `errors: ErrorStatus | None`, `lamps: list[Lamp] | None`, `filter_hours: int | None`.
 
-- [ ] Step 1: write `test_models.py` covering `InputSource.from_code("3A")` → `InputSource(DIGITAL, "A")`, `.code`, `str()`, invalid code raises `ValueError`; `ErrorStatus.has_problem`; `Resolution` str.
-- [ ] Step 2: `cd lib && uv run --extra test pytest tests/test_models.py` → FAIL (import error).
-- [ ] Step 3: implement `errors.py`, `models.py`, `pyproject.toml` (hatchling, `requires-python >=3.13`, optional extra `test = [pytest, pytest-asyncio]`, `asyncio_mode = "auto"`).
-- [ ] Step 4: rerun → PASS.
-- [ ] Step 5: commit `feat(lib): add models and errors`.
+- [x] Step 1: write `test_models.py` covering `InputSource.from_code("3A")` → `InputSource(DIGITAL, "A")`, `.code`, `str()`, invalid code raises `ValueError`; `ErrorStatus.has_problem`; `Resolution` str.
+- [x] Step 2: `cd lib && uv run --extra test pytest tests/test_models.py` → FAIL (import error).
+- [x] Step 3: implement `errors.py`, `models.py`, `pyproject.toml` (hatchling, `requires-python >=3.13`, optional extra `test = [pytest, pytest-asyncio]`, `asyncio_mode = "auto"`).
+- [x] Step 4: rerun → PASS.
+- [x] Step 5: commit `feat(lib): add models and errors`.
 
 ### Task 2: Protocol codec
 
@@ -119,11 +119,11 @@ README.md
 - `parse_notification(line: str) -> tuple[str, str] | None` → `("POWR", "1")` for `"%2POWR=1"`, `("LKUP", mac)`; `None` for non-notification.
 - `parse_ack(line: str) -> str | None` → MAC for `"%2ACKN=00:11:22:33:44:55"`.
 
-- [ ] Step 1: tests with spec vectors for every decoder, `ERR1..ERR4` mapping, `PJLINK ERRA`, digest vector (`auth_digest("498e4a67", "JBMIAProjectorLink") == "5d8409bc1c3fa39749434aa3a5c38682"`), malformed lines.
-- [ ] Step 2: run → FAIL.
-- [ ] Step 3: implement.
-- [ ] Step 4: run → PASS.
-- [ ] Step 5: commit `feat(lib): add PJLink protocol codec`.
+- [x] Step 1: tests with spec vectors for every decoder, `ERR1..ERR4` mapping, `PJLINK ERRA`, digest vector (`auth_digest("498e4a67", "JBMIAProjectorLink") == "5d8409bc1c3fa39749434aa3a5c38682"`), malformed lines.
+- [x] Step 2: run → FAIL.
+- [x] Step 3: implement.
+- [x] Step 4: run → PASS.
+- [x] Step 5: commit `feat(lib): add PJLink protocol codec`.
 
 ### Task 3: Emulator (TCP)
 
@@ -141,11 +141,11 @@ README.md
   - `received: list[str]` log of commands.
   - Behaviour: `set POWR 1` when off → `WARMING`; `transition_delay` (default 0) after which → `ON`; `POWR 0` → `COOLING` then `OFF`. Class-1-only emulator answers `ERR1` to `%2` commands except it still answers `%1CLSS ?` with `1`.
 
-- [ ] Step 1: tests: greeting without password `PJLINK 0`; with password `PJLINK 1 <8 hex>`, wrong digest → `PJLINK ERRA`; `%1POWR ?` → `%1POWR=0`; set/query round trip for INPT, AVMT, FREZ; unsupported → ERR1; idle timeout closes socket.
-- [ ] Step 2: run → FAIL.
-- [ ] Step 3: implement with `asyncio.start_server`.
-- [ ] Step 4: run → PASS.
-- [ ] Step 5: commit `feat(lib): add PJLink projector emulator`.
+- [x] Step 1: tests: greeting without password `PJLINK 0`; with password `PJLINK 1 <8 hex>`, wrong digest → `PJLINK ERRA`; `%1POWR ?` → `%1POWR=0`; set/query round trip for INPT, AVMT, FREZ; unsupported → ERR1; idle timeout closes socket.
+- [x] Step 2: run → FAIL.
+- [x] Step 3: implement with `asyncio.start_server`.
+- [x] Step 4: run → PASS.
+- [x] Step 5: commit `feat(lib): add PJLink projector emulator`.
 
 ### Task 4: Client
 
@@ -159,11 +159,11 @@ README.md
 - `async fetch_static() -> DeviceInfo`: tolerant — optional Class 2 queries catch `PJLinkCommandError` and leave `None`/omit names.
 - `async fetch_state(*, full: bool, pj_class: int) -> ProjectorState`: always power; when power is ON/WARMING also input, mute, freeze (class 2), input resolution (class 2); `full=True` adds errors, lamps, filter (class 2). `PJLinkUnavailableTime` on optional fields → `None`.
 
-- [ ] Step 1: tests against emulator: power round trip; auth success/failure (`PJLinkAuthError`); persistent connection (`emulator.connections == 1` after 5 commands); reconnect after emulator idle timeout; `ERR3` → `PJLinkUnavailableTime`; `fetch_static` on class 1 emulator leaves Class 2 fields `None`; `fetch_state(full=True)` populated; timeout against a server that never answers → `PJLinkConnectionError`; non-UTF-8 name decodes via `latin-1` fallback.
-- [ ] Step 2: run → FAIL.
-- [ ] Step 3: implement.
-- [ ] Step 4: run → PASS.
-- [ ] Step 5: commit `feat(lib): add async PJLink client`.
+- [x] Step 1: tests against emulator: power round trip; auth success/failure (`PJLinkAuthError`); persistent connection (`emulator.connections == 1` after 5 commands); reconnect after emulator idle timeout; `ERR3` → `PJLinkUnavailableTime`; `fetch_static` on class 1 emulator leaves Class 2 fields `None`; `fetch_state(full=True)` populated; timeout against a server that never answers → `PJLinkConnectionError`; non-UTF-8 name decodes via `latin-1` fallback.
+- [x] Step 2: run → FAIL.
+- [x] Step 3: implement.
+- [x] Step 4: run → PASS.
+- [x] Step 5: commit `feat(lib): add async PJLink client`.
 
 ### Task 5: UDP listener (search + notifications)
 
@@ -173,11 +173,11 @@ README.md
 - `PJLinkListener(*, host="0.0.0.0", port=4352)`: `async start()`, `async stop()`, `register(ip: str, callback: Callable[[str, str], None]) -> Callable[[], None]` (returns unregister), `async discover(timeout: float = 5.0, *, broadcast: str = "255.255.255.255", target_port: int = 4352) -> list[tuple[str, str]]` returning `(ip, mac)`.
 - Emulator: `udp_port` property; `async notify(command: str, value: str, target: tuple[str, int])`.
 
-- [ ] Step 1: tests (listener on port 0, emulator UDP on port 0, unicast `broadcast="127.0.0.1"`): discover returns `[("127.0.0.1", mac)]`; notification `POWR=1` reaches registered callback; unregister stops delivery; messages from unknown IP ignored.
-- [ ] Step 2: run → FAIL.
-- [ ] Step 3: implement with `loop.create_datagram_endpoint` (`SO_BROADCAST`, `reuse_port` where available).
-- [ ] Step 4: run → PASS. Full lib suite + `ruff check`.
-- [ ] Step 5: commit `feat(lib): add UDP search and status notifications`.
+- [x] Step 1: tests (listener on port 0, emulator UDP on port 0, unicast `broadcast="127.0.0.1"`): discover returns `[("127.0.0.1", mac)]`; notification `POWR=1` reaches registered callback; unregister stops delivery; messages from unknown IP ignored.
+- [x] Step 2: run → FAIL.
+- [x] Step 3: implement with `loop.create_datagram_endpoint` (`SO_BROADCAST`, `reuse_port` where available).
+- [x] Step 4: run → PASS. Full lib suite + `ruff check`.
+- [x] Step 5: commit `feat(lib): add UDP search and status notifications`.
 
 ---
 
@@ -194,11 +194,11 @@ README.md
 - `PJLinkEntity(CoordinatorEntity[PJLinkCoordinator])`: `_attr_has_entity_name = True`, `device_info` from `coordinator.device`, `unique_id = f"{entry_id}_{key}"` unless overridden.
 - `__init__.py`: `async_setup_entry`, `async_unload_entry`, `async_migrate_entry` (1 → 2: add `encoding`), platforms list.
 
-- [ ] Step 1: tests: setup with emulator → `ConfigEntryState.LOADED`; unreachable host → `SETUP_RETRY`; wrong password → `SETUP_ERROR` + reauth flow started; migration of a v1 entry keeps data and sets version 2; unload closes client.
-- [ ] Step 2: run → FAIL.
-- [ ] Step 3: implement.
-- [ ] Step 4: run → PASS.
-- [ ] Step 5: commit `feat: add integration scaffold and coordinator`.
+- [x] Step 1: tests: setup with emulator → `ConfigEntryState.LOADED`; unreachable host → `SETUP_RETRY`; wrong password → `SETUP_ERROR` + reauth flow started; migration of a v1 entry keeps data and sets version 2; unload closes client.
+- [x] Step 2: run → FAIL.
+- [x] Step 3: implement.
+- [x] Step 4: run → PASS.
+- [x] Step 5: commit `feat: add integration scaffold and coordinator`.
 
 ### Task 7: Config flow
 
@@ -206,11 +206,11 @@ README.md
 
 **Interfaces — Produces:** `PJLinkConfigFlow(VERSION=2)` steps: `user` (menu: `search`, `manual`), `search` (runs `PJLinkListener.discover`, select from results or abort `no_devices_found`), `manual` (host/port/password), `import` (YAML, kept for compatibility), `reauth_confirm`, `reconfigure`. Unique id: serial → mac → `host:port`. `PJLinkOptionsFlow`: scan interval (10–300), lamp warning hours, filter warning hours, push toggle. Errors `cannot_connect`, `invalid_auth`, `unknown`.
 
-- [ ] Step 1: tests: manual success creates entry titled with projector name and unique id = serial; duplicate aborts `already_configured`; cannot_connect; invalid_auth; search with patched discover; search empty aborts; reauth updates password; reconfigure updates host; options saved; import creates entry.
-- [ ] Step 2: run → FAIL.
-- [ ] Step 3: implement.
-- [ ] Step 4: run → PASS.
-- [ ] Step 5: commit `feat: add config, reauth, reconfigure and options flows`.
+- [x] Step 1: tests: manual success creates entry titled with projector name and unique id = serial; duplicate aborts `already_configured`; cannot_connect; invalid_auth; search with patched discover; search empty aborts; reauth updates password; reconfigure updates host; options saved; import creates entry.
+- [x] Step 2: run → FAIL.
+- [x] Step 3: implement.
+- [x] Step 4: run → PASS.
+- [x] Step 5: commit `feat: add config, reauth, reconfigure and options flows`.
 
 ### Task 8: media_player
 
@@ -220,7 +220,7 @@ README.md
 - State ON when power ON/WARMING, OFF otherwise. Source list uses Class 2 input names when present (`"HDMI1"`), else `str(InputSource)`; duplicates disambiguated with code suffix.
 - `unique_id = entry.entry_id`, `name=None` (device name).
 
-- [ ] Steps: test (state, turn on/off reaches emulator, select source by friendly name, mute, volume up sends `%2SVOL 1`, command failure raises `HomeAssistantError`) → FAIL → implement → PASS → commit `feat: add media player`.
+- [x] Steps: test (state, turn on/off reaches emulator, select source by friendly name, mute, volume up sends `%2SVOL 1`, command failure raises `HomeAssistantError`) → FAIL → implement → PASS → commit `feat: add media player`.
 
 ### Task 9: sensor + binary_sensor
 
@@ -229,7 +229,7 @@ README.md
 - Sensors (`SensorEntityDescription` with `value_fn`): `power_status` (enum), `lamp_{n}_hours` (one per lamp, `HOURS`, `TOTAL_INCREASING`), `filter_hours` (class 2), `error_{fan,lamp,temperature,cover,filter,other}` (enum, entity_category diagnostic), `input_resolution` (class 2), `recommended_resolution` (class 2, diagnostic, disabled), `lamp_model`, `filter_model` (class 2, diagnostic, only if non-empty).
 - Binary sensor `problem` (`BinarySensorDeviceClass.PROBLEM`).
 
-- [ ] Steps: test values from emulator, class 1 emulator creates no class 2 sensors, problem turns on when emulator error set → FAIL → implement → PASS → commit `feat: add sensors and problem binary sensor`.
+- [x] Steps: test values from emulator, class 1 emulator creates no class 2 sensors, problem turns on when emulator error set → FAIL → implement → PASS → commit `feat: add sensors and problem binary sensor`.
 
 ### Task 10: switch + button
 
@@ -238,7 +238,7 @@ README.md
 - Switches: `video_mute` (AVMT target VIDEO), `freeze` (class 2). Unavailable while projector is not ON.
 - Buttons: `mic_volume_up`, `mic_volume_down` (class 2, disabled by default, skipped when `MVOL` unsupported).
 
-- [ ] Steps: test toggles reach emulator state, class 1 lacks freeze → FAIL → implement → PASS → commit `feat: add video mute, freeze and mic volume controls`.
+- [x] Steps: test toggles reach emulator state, class 1 lacks freeze → FAIL → implement → PASS → commit `feat: add video mute, freeze and mic volume controls`.
 
 ### Task 11: send_command action, repairs, diagnostics
 
@@ -248,7 +248,7 @@ README.md
 - Repairs (`issue_registry`, not fixable): `lamp_hours_{entry_id}` when max lamp hours ≥ option (if option > 0), `filter_hours_{entry_id}` likewise, `projector_error_{entry_id}` when any ERST category is ERROR. Deleted when the condition clears. Evaluated on each coordinator update.
 - Diagnostics: entry data with password redacted, options, `asdict(device)`, `asdict(state)`.
 
-- [ ] Steps: tests → FAIL → implement → PASS → commit `feat: add send_command action, repairs and diagnostics`.
+- [x] Steps: tests → FAIL → implement → PASS → commit `feat: add send_command action, repairs and diagnostics`.
 
 ### Task 12: Push notifications
 
@@ -257,7 +257,7 @@ README.md
 - One `PJLinkListener` per HA instance in `hass.data[DOMAIN]` (ref-counted, started when the first entry with `push=True` loads, stopped when the last unloads). If binding fails, log a warning and keep polling.
 - `coordinator.handle_notification`: `POWR`/`INPT`/`AVMT`/`ERST` update `self.data` copy and call `async_set_updated_data`; `ERST` also triggers a full refresh next cycle. With push active, idle interval becomes `SLOW_INTERVAL`.
 
-- [ ] Steps: test with emulator `notify` updates media_player state without polling → FAIL → implement → PASS → commit `feat: add Class 2 status notifications`.
+- [x] Steps: test with emulator `notify` updates media_player state without polling → FAIL → implement → PASS → commit `feat: add Class 2 status notifications`.
 
 ### Task 13: Packaging and CI
 
@@ -265,4 +265,4 @@ README.md
 
 - During development `manifest.json` requirements reference `pjlink-advance==0.1.0`; README explains publishing the lib first.
 
-- [ ] Steps: run full suite + `ruff check .` → commit `chore: add packaging, docs and CI`.
+- [x] Steps: run full suite + `ruff check .` → commit `chore: add packaging, docs and CI`.
