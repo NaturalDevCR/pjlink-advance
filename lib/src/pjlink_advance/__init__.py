@@ -1,5 +1,6 @@
 """Asyncio PJLink Class 1 and Class 2 library."""
 
+from .client import PJLinkClient
 from .errors import (
     PJLinkAuthError,
     PJLinkCommandError,
@@ -11,6 +12,7 @@ from .errors import (
     PJLinkUnavailableTime,
     PJLinkUndefinedCommand,
 )
+from .listener import PJLinkListener
 from .models import (
     ERROR_CATEGORIES,
     NO_SIGNAL,
@@ -42,9 +44,11 @@ __all__ = [
     "MuteState",
     "MuteTarget",
     "PJLinkAuthError",
+    "PJLinkClient",
     "PJLinkCommandError",
     "PJLinkConnectionError",
     "PJLinkError",
+    "PJLinkListener",
     "PJLinkOutOfParameter",
     "PJLinkProjectorFailure",
     "PJLinkProtocolError",
