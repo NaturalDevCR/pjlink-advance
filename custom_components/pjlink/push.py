@@ -48,6 +48,14 @@ def _async_release(hass: HomeAssistant) -> None:
         hass.async_create_task(shared.listener.stop(), eager_start=True)
 
 
+async def _discover(listener: PJLinkListener) -> list[tuple[str, str]]:
+    return await listener.discover(
+        duration=const.SEARCH_DURATION,
+        broadcast=const.SEARCH_BROADCAST,
+        target_port=const.SEARCH_TARGET_PORT,
+    )
+
+
 async def async_search(hass: HomeAssistant) -> list[tuple[str, str]]:
     """Broadcast a Class 2 search and return ``(ip, mac)`` pairs."""
     try:
@@ -58,11 +66,11 @@ async def async_search(hass: HomeAssistant) -> list[tuple[str, str]]:
         listener = PJLinkListener(port=0)
         await listener.start()
         try:
-            return await listener.discover(duration=const.SEARCH_DURATION)
+            return await _discover(listener)
         finally:
             await listener.stop()
     try:
-        return await listener.discover(duration=const.SEARCH_DURATION)
+        return await _discover(listener)
     finally:
         _async_release(hass)
 
