@@ -1,0 +1,201 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "no_devices_found": "No Class 2 projectors answered the network search. Use manual setup instead.",
+      "reauth_successful": "Re-authentication was successful",
+      "reconfigure_successful": "Re-configuration was successful",
+      "unknown": "Unexpected error",
+      "wrong_device": "The projector at this address is a different device."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "title": "Add a PJLink projector",
+        "menu_options": {
+          "search": "Search the network (Class 2)",
+          "manual": "Enter the address manually"
+        }
+      },
+      "search": {
+        "title": "Projectors found",
+        "data": {
+          "host": "Projector",
+          "password": "Password"
+        },
+        "data_description": {
+          "password": "PJLink password. Leave empty if authentication is disabled."
+        }
+      },
+      "manual": {
+        "title": "Connect to a projector",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "password": "Password"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the projector.",
+          "port": "PJLink TCP port, normally 4352.",
+          "password": "PJLink password. Leave empty if authentication is disabled."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate {name}",
+        "description": "The projector rejected the password. Enter the current PJLink password.",
+        "data": {
+          "password": "Password"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure projector",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "password": "Password"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "PJLink options",
+        "data": {
+          "scan_interval": "Polling interval (seconds)",
+          "lamp_warning_hours": "Lamp / light source warning (hours)",
+          "filter_warning_hours": "Filter warning (hours)",
+          "push": "Receive Class 2 status notifications"
+        },
+        "data_description": {
+          "scan_interval": "How often to poll while the projector is idle. Warm-up and cool-down are always polled every 5 seconds.",
+          "lamp_warning_hours": "Create a repair issue when the lamp reaches this many hours. 0 disables it.",
+          "filter_warning_hours": "Create a repair issue when the filter reaches this many hours. 0 disables it.",
+          "push": "Listen on UDP port 4352 for instant updates. Needs Home Assistant on the same network as the projector (host networking in Docker)."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "problem": { "name": "Problem" }
+    },
+    "button": {
+      "mic_volume_up": { "name": "Microphone volume up" },
+      "mic_volume_down": { "name": "Microphone volume down" }
+    },
+    "sensor": {
+      "power_status": {
+        "name": "Power status",
+        "state": {
+          "off": "Off",
+          "on": "On",
+          "warming": "Warming up",
+          "cooling": "Cooling down"
+        }
+      },
+      "lamp_hours": { "name": "Lamp hours" },
+      "lamp_n_hours": { "name": "Lamp {number} hours" },
+      "filter_hours": { "name": "Filter hours" },
+      "input_resolution": {
+        "name": "Input resolution",
+        "state": { "no_signal": "No signal" }
+      },
+      "recommended_resolution": { "name": "Recommended resolution" },
+      "lamp_model": { "name": "Replacement lamp" },
+      "filter_model": { "name": "Replacement filter" },
+      "error_fan": {
+        "name": "Fan status",
+        "state": { "ok": "OK", "warning": "Warning", "error": "Error" }
+      },
+      "error_lamp": {
+        "name": "Lamp status",
+        "state": { "ok": "OK", "warning": "Warning", "error": "Error" }
+      },
+      "error_temperature": {
+        "name": "Temperature status",
+        "state": { "ok": "OK", "warning": "Warning", "error": "Error" }
+      },
+      "error_cover": {
+        "name": "Cover status",
+        "state": { "ok": "OK", "warning": "Warning", "error": "Error" }
+      },
+      "error_filter": {
+        "name": "Filter status",
+        "state": { "ok": "OK", "warning": "Warning", "error": "Error" }
+      },
+      "error_other": {
+        "name": "Other status",
+        "state": { "ok": "OK", "warning": "Warning", "error": "Error" }
+      }
+    },
+    "switch": {
+      "video_mute": { "name": "Video mute" },
+      "freeze": { "name": "Freeze image" }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": { "message": "Cannot communicate with the projector: {error}" },
+    "invalid_auth": { "message": "The projector rejected the PJLink password." },
+    "command_failed": { "message": "PJLink command failed: {error}" },
+    "not_supported": { "message": "The projector does not support the {command} command." },
+    "entry_not_found": { "message": "No PJLink entry with id {entry_id}." },
+    "entry_not_loaded": { "message": "{name} is not loaded." }
+  },
+  "issues": {
+    "lamp_hours": {
+      "title": "{name}: lamp needs replacement",
+      "description": "The lamp / light source of {name} has {hours} hours (warning at {limit}). Replacement model: {model}. Change the threshold in the integration options."
+    },
+    "filter_hours": {
+      "title": "{name}: clean or replace the filter",
+      "description": "The filter of {name} has {hours} hours (warning at {limit}). Replacement model: {model}. Reset the filter counter on the projector after servicing it."
+    },
+    "projector_error": {
+      "title": "{name} reports an error",
+      "description": "The projector reports an error in: {categories}. Check the projector; this issue disappears once the error clears."
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "The PJLink YAML configuration import failed",
+      "description": "Configuring {integration_title} via YAML is deprecated. While importing your configuration, a connection error occurred. Fix your YAML configuration and restart Home Assistant, or remove the {domain} entry from your configuration and set the integration up from the UI."
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "title": "The PJLink YAML configuration import failed",
+      "description": "Configuring {integration_title} via YAML is deprecated. While importing your configuration, invalid authentication details were found. Fix your YAML configuration and restart Home Assistant, or remove the {domain} entry from your configuration and set the integration up from the UI."
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "title": "The PJLink YAML configuration import failed",
+      "description": "Configuring {integration_title} via YAML is deprecated. While importing your configuration, an unexpected error occurred. Fix your YAML configuration and restart Home Assistant, or remove the {domain} entry from your configuration and set the integration up from the UI."
+    }
+  },
+  "services": {
+    "send_command": {
+      "name": "Send command",
+      "description": "Sends a raw PJLink command and returns the projector's answer.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Projector",
+          "description": "The PJLink projector to send the command to."
+        },
+        "command": {
+          "name": "Command",
+          "description": "Four-letter PJLink command, for example INF1 or SVER."
+        },
+        "parameter": {
+          "name": "Parameter",
+          "description": "Command parameter. Use ? to query."
+        },
+        "pj_class": {
+          "name": "Class",
+          "description": "PJLink class of the command (1 or 2)."
+        }
+      }
+    }
+  }
+}

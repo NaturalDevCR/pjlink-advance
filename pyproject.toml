@@ -1,0 +1,33 @@
+[project]
+name = "pjlink-advance-ha"
+version = "0.1.0"
+description = "Development environment for the pjlink Home Assistant custom integration"
+requires-python = ">=3.14.2"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest-homeassistant-custom-component==0.13.374",
+    "pjlink-advance",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+pjlink-advance = { path = "lib", editable = true }
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py314"
+extend-exclude = ["lib"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "ASYNC", "PL"]
+ignore = ["PLR2004", "PLR0913", "PLR0911"]
