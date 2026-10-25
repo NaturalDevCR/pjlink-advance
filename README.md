@@ -28,7 +28,7 @@ for testing without hardware.
 | Repair issues (lamp, filter, errors) | ❌ | ✅ |
 | `pjlink.send_command` action with response | ❌ | ✅ |
 | Downloadable diagnostics | ❌ | ✅ |
-| Persistent connection with automatic reconnect | ❌ (one connection per query) | ✅ |
+| Persistent connection with automatic reconnect | ❌ (one connection per query) | ✅ (optional: close after each polling cycle) |
 | Adaptive polling (5 s while warming up) | ❌ | ✅ |
 | Translations | EN | EN + ES |
 
@@ -70,6 +70,7 @@ restart.
 | Lamp warning | 20000 h | Creates a repair issue. 0 disables it. |
 | Filter warning | 0 (disabled) | Same as above. |
 | Class 2 notifications | off | Listens on UDP 4352. With push enabled, polling drops to every 5 min. |
+| Keep the connection open | on | Reuses one PJLink session. Turn it off when another control system (Crestron, Extron, vendor software) also uses PJLink with the projector: the connection then closes after every polling cycle and every command. |
 
 Push notifications and network search need Home Assistant and the projector on
 the same subnet, and Home Assistant must receive UDP on port 4352 (Home

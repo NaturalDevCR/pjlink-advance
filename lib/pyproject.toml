@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pjlink-advance"
-version = "0.1.0"
+version = "0.2.0"
 description = "Asyncio PJLink Class 1 and Class 2 client with search, status notifications and a projector emulator"
 readme = "README.md"
 license = "MIT"

@@ -13,9 +13,11 @@ from pjlink_advance import PJLinkClient
 
 from .const import (
     CONF_ENCODING,
+    CONF_KEEP_CONNECTION,
     CONF_MAC,
     CONF_PUSH,
     DEFAULT_ENCODING,
+    DEFAULT_KEEP_CONNECTION,
     DEFAULT_PORT,
     DOMAIN,
 )
@@ -52,6 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PJLinkConfigEntry) -> bo
         entry.data.get(CONF_PORT, DEFAULT_PORT),
         entry.data.get(CONF_PASSWORD) or None,
         encoding=entry.data.get(CONF_ENCODING, DEFAULT_ENCODING),
+        persistent=entry.options.get(CONF_KEEP_CONNECTION, DEFAULT_KEEP_CONNECTION),
     )
     coordinator = PJLinkCoordinator(hass, entry, client)
     try:

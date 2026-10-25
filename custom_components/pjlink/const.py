@@ -10,12 +10,14 @@ CONF_SCAN_INTERVAL: Final = "scan_interval"
 CONF_LAMP_WARNING_HOURS: Final = "lamp_warning_hours"
 CONF_FILTER_WARNING_HOURS: Final = "filter_warning_hours"
 CONF_PUSH: Final = "push"
+CONF_KEEP_CONNECTION: Final = "keep_connection"
 
 DEFAULT_PORT: Final = 4352
 DEFAULT_ENCODING: Final = "utf-8"
 DEFAULT_SCAN_INTERVAL: Final = 30
 DEFAULT_LAMP_WARNING_HOURS: Final = 20000
 DEFAULT_FILTER_WARNING_HOURS: Final = 0
+DEFAULT_KEEP_CONNECTION: Final = True
 
 # Poll every few seconds while the projector warms up or cools down.
 TRANSITION_INTERVAL: Final = 5

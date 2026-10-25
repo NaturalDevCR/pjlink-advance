@@ -31,12 +31,14 @@ from pjlink_advance import (
 from .const import (
     CONF_ENCODING,
     CONF_FILTER_WARNING_HOURS,
+    CONF_KEEP_CONNECTION,
     CONF_LAMP_WARNING_HOURS,
     CONF_MAC,
     CONF_PUSH,
     CONF_SCAN_INTERVAL,
     DEFAULT_ENCODING,
     DEFAULT_FILTER_WARNING_HOURS,
+    DEFAULT_KEEP_CONNECTION,
     DEFAULT_LAMP_WARNING_HOURS,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
@@ -303,6 +305,12 @@ class PJLinkOptionsFlow(OptionsFlow):
                     ): vol.All(vol.Coerce(int), vol.Range(min=0, max=200000)),
                     vol.Required(
                         CONF_PUSH, default=options.get(CONF_PUSH, False)
+                    ): bool,
+                    vol.Required(
+                        CONF_KEEP_CONNECTION,
+                        default=options.get(
+                            CONF_KEEP_CONNECTION, DEFAULT_KEEP_CONNECTION
+                        ),
                     ): bool,
                 }
             ),

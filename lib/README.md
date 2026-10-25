@@ -26,6 +26,20 @@ asyncio.run(main())
 One TCP session is kept open and shared by all commands (serialized with a
 lock). It reconnects on its own when the projector drops idle sessions.
 
+Pass `persistent=False` to release the projector between uses (useful when
+another controller also talks PJLink to it). Each command then opens and closes
+its own connection, while `fetch_static()`, `fetch_state()` and
+`async with client.session():` blocks share one connection and close it at the
+end:
+
+```python
+client = PJLinkClient("192.168.1.50", persistent=False)
+async with client.session():
+    await client.set_power(True)
+    power = await client.get_power()
+# connection closed here
+```
+
 Errors: `PJLinkConnectionError`, `PJLinkAuthError`, `PJLinkProtocolError`, and
 `PJLinkCommandError` subclasses for `ERR1`–`ERR4`
 (`PJLinkUndefinedCommand`, `PJLinkOutOfParameter`, `PJLinkUnavailableTime`,

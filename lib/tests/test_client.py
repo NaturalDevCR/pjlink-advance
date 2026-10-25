@@ -243,3 +243,49 @@ async def test_concurrent_commands_are_serialized(
     results = await asyncio.gather(*(client.get_power() for _ in range(10)))
     assert results == [PowerState.OFF] * 10
     assert emulator.connections == 1
+
+
+async def test_non_persistent_closes_after_each_command(
+    emulator: PJLinkEmulator,
+) -> None:
+    async with PJLinkClient("127.0.0.1", emulator.port, persistent=False) as client:
+        assert await client.get_power() is PowerState.OFF
+        assert not client.connected
+        await client.get_power()
+        assert emulator.connections == 2
+
+
+async def test_non_persistent_closes_after_command_error(
+    emulator: PJLinkEmulator,
+) -> None:
+    async with PJLinkClient("127.0.0.1", emulator.port, persistent=False) as client:
+        with pytest.raises(PJLinkUnavailableTime):
+            await client.get_input()
+        assert not client.connected
+
+
+async def test_non_persistent_session_shares_one_connection(
+    emulator: PJLinkEmulator,
+) -> None:
+    async with PJLinkClient("127.0.0.1", emulator.port, persistent=False) as client:
+        await client.fetch_static()
+        assert not client.connected
+        assert emulator.connections == 1
+        await client.fetch_state(full=True, pj_class=2)
+        assert emulator.connections == 2
+        async with client.session():
+            await client.get_power()
+            await client.get_errors()
+            assert client.connected
+        assert not client.connected
+        assert emulator.connections == 3
+
+
+async def test_persistent_session_keeps_connection(
+    client: PJLinkClient, emulator: PJLinkEmulator
+) -> None:
+    async with client.session():
+        await client.get_power()
+    await client.fetch_state(full=True, pj_class=2)
+    assert client.connected
+    assert emulator.connections == 1

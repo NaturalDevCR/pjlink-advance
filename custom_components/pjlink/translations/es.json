@@ -71,24 +71,32 @@
           "scan_interval": "Intervalo de sondeo (segundos)",
           "lamp_warning_hours": "Aviso de lámpara / fuente de luz (horas)",
           "filter_warning_hours": "Aviso de filtro (horas)",
-          "push": "Recibir notificaciones de estado Class 2"
+          "push": "Recibir notificaciones de estado Class 2",
+          "keep_connection": "Mantener la conexión abierta"
         },
         "data_description": {
           "scan_interval": "Cada cuánto se consulta el proyector en reposo. El calentamiento y el enfriamiento se consultan siempre cada 5 segundos.",
           "lamp_warning_hours": "Crea un aviso de reparación cuando la lámpara llegue a estas horas. 0 lo desactiva.",
           "filter_warning_hours": "Crea un aviso de reparación cuando el filtro llegue a estas horas. 0 lo desactiva.",
-          "push": "Escucha en el puerto UDP 4352 para actualizaciones instantáneas. Requiere Home Assistant en la misma red que el proyector (red host en Docker)."
+          "push": "Escucha en el puerto UDP 4352 para actualizaciones instantáneas. Requiere Home Assistant en la misma red que el proyector (red host en Docker).",
+          "keep_connection": "Más rápido, pero ocupa la sesión PJLink del proyector. Desactívalo si otro sistema de control (Crestron, Extron, software del fabricante) también usa PJLink con este proyector: la conexión se cerrará tras cada ciclo de sondeo."
         }
       }
     }
   },
   "entity": {
     "binary_sensor": {
-      "problem": { "name": "Problema" }
+      "problem": {
+        "name": "Problema"
+      }
     },
     "button": {
-      "mic_volume_up": { "name": "Subir volumen del micrófono" },
-      "mic_volume_down": { "name": "Bajar volumen del micrófono" }
+      "mic_volume_up": {
+        "name": "Subir volumen del micrófono"
+      },
+      "mic_volume_down": {
+        "name": "Bajar volumen del micrófono"
+      }
     },
     "sensor": {
       "power_status": {
@@ -100,53 +108,107 @@
           "cooling": "Enfriando"
         }
       },
-      "lamp_hours": { "name": "Horas de lámpara" },
-      "lamp_n_hours": { "name": "Horas de lámpara {number}" },
-      "filter_hours": { "name": "Horas de filtro" },
+      "lamp_hours": {
+        "name": "Horas de lámpara"
+      },
+      "lamp_n_hours": {
+        "name": "Horas de lámpara {number}"
+      },
+      "filter_hours": {
+        "name": "Horas de filtro"
+      },
       "input_resolution": {
         "name": "Resolución de entrada",
-        "state": { "no_signal": "Sin señal" }
+        "state": {
+          "no_signal": "Sin señal"
+        }
       },
-      "recommended_resolution": { "name": "Resolución recomendada" },
-      "lamp_model": { "name": "Lámpara de repuesto" },
-      "filter_model": { "name": "Filtro de repuesto" },
+      "recommended_resolution": {
+        "name": "Resolución recomendada"
+      },
+      "lamp_model": {
+        "name": "Lámpara de repuesto"
+      },
+      "filter_model": {
+        "name": "Filtro de repuesto"
+      },
       "error_fan": {
         "name": "Estado del ventilador",
-        "state": { "ok": "OK", "warning": "Advertencia", "error": "Error" }
+        "state": {
+          "ok": "OK",
+          "warning": "Advertencia",
+          "error": "Error"
+        }
       },
       "error_lamp": {
         "name": "Estado de la lámpara",
-        "state": { "ok": "OK", "warning": "Advertencia", "error": "Error" }
+        "state": {
+          "ok": "OK",
+          "warning": "Advertencia",
+          "error": "Error"
+        }
       },
       "error_temperature": {
         "name": "Estado de la temperatura",
-        "state": { "ok": "OK", "warning": "Advertencia", "error": "Error" }
+        "state": {
+          "ok": "OK",
+          "warning": "Advertencia",
+          "error": "Error"
+        }
       },
       "error_cover": {
         "name": "Estado de la tapa",
-        "state": { "ok": "OK", "warning": "Advertencia", "error": "Error" }
+        "state": {
+          "ok": "OK",
+          "warning": "Advertencia",
+          "error": "Error"
+        }
       },
       "error_filter": {
         "name": "Estado del filtro",
-        "state": { "ok": "OK", "warning": "Advertencia", "error": "Error" }
+        "state": {
+          "ok": "OK",
+          "warning": "Advertencia",
+          "error": "Error"
+        }
       },
       "error_other": {
         "name": "Otros estados",
-        "state": { "ok": "OK", "warning": "Advertencia", "error": "Error" }
+        "state": {
+          "ok": "OK",
+          "warning": "Advertencia",
+          "error": "Error"
+        }
       }
     },
     "switch": {
-      "video_mute": { "name": "Silenciar video" },
-      "freeze": { "name": "Congelar imagen" }
+      "video_mute": {
+        "name": "Silenciar video"
+      },
+      "freeze": {
+        "name": "Congelar imagen"
+      }
     }
   },
   "exceptions": {
-    "cannot_connect": { "message": "No se puede comunicar con el proyector: {error}" },
-    "invalid_auth": { "message": "El proyector rechazó la contraseña PJLink." },
-    "command_failed": { "message": "Falló el comando PJLink: {error}" },
-    "not_supported": { "message": "El proyector no admite el comando {command}." },
-    "entry_not_found": { "message": "No existe una entrada PJLink con id {entry_id}." },
-    "entry_not_loaded": { "message": "{name} no está cargado." }
+    "cannot_connect": {
+      "message": "No se puede comunicar con el proyector: {error}"
+    },
+    "invalid_auth": {
+      "message": "El proyector rechazó la contraseña PJLink."
+    },
+    "command_failed": {
+      "message": "Falló el comando PJLink: {error}"
+    },
+    "not_supported": {
+      "message": "El proyector no admite el comando {command}."
+    },
+    "entry_not_found": {
+      "message": "No existe una entrada PJLink con id {entry_id}."
+    },
+    "entry_not_loaded": {
+      "message": "{name} no está cargado."
+    }
   },
   "issues": {
     "lamp_hours": {

@@ -88,9 +88,10 @@ class PJLinkCoordinator(DataUpdateCoordinator[ProjectorState]):
     async def _async_setup(self) -> None:
         """Read static information once."""
         try:
-            self.device = await self.client.fetch_static()
-            if self.device.pj_class >= 2:
-                await self._probe()
+            async with self.client.session():
+                self.device = await self.client.fetch_static()
+                if self.device.pj_class >= 2:
+                    await self._probe()
         except PJLinkAuthError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="invalid_auth"
@@ -116,13 +117,16 @@ class PJLinkCoordinator(DataUpdateCoordinator[ProjectorState]):
         now = time.monotonic()
         full = self._force_full or now - self._last_full >= SLOW_INTERVAL
         try:
-            state = await self.client.fetch_state(full=full, pj_class=self.pj_class)
-            just_turned_on = state.power.is_on and (
-                self.data is None or not self.data.power.is_on
-            )
-            if just_turned_on and not self.device.inputs:
-                # Some projectors only list inputs once they are on.
-                self.device = await self.client.fetch_static()
+            # One connection per cycle; it closes afterwards when the
+            # "keep connection open" option is off.
+            async with self.client.session():
+                state = await self.client.fetch_state(full=full, pj_class=self.pj_class)
+                just_turned_on = state.power.is_on and (
+                    self.data is None or not self.data.power.is_on
+                )
+                if just_turned_on and not self.device.inputs:
+                    # Some projectors only list inputs once they are on.
+                    self.device = await self.client.fetch_static()
         except PJLinkAuthError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="invalid_auth"
@@ -170,7 +174,15 @@ class PJLinkCoordinator(DataUpdateCoordinator[ProjectorState]):
     async def async_command(
         self, func: Callable[..., Awaitable[Any]], *args: Any, **kwargs: Any
     ) -> None:
-        """Run a projector command, then refresh."""
+        """Run a projector command, then refresh on the same connection."""
+        async with self.client.session():
+            await self._async_run(func, *args, **kwargs)
+            # Refresh right away (not debounced) so the UI follows each command.
+            await self.async_refresh()
+
+    async def _async_run(
+        self, func: Callable[..., Awaitable[Any]], *args: Any, **kwargs: Any
+    ) -> None:
         try:
             await func(*args, **kwargs)
         except PJLinkUndefinedCommand as err:
@@ -185,8 +197,6 @@ class PJLinkCoordinator(DataUpdateCoordinator[ProjectorState]):
                 translation_key="command_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        # Refresh right away (not debounced) so the UI follows each command.
-        await self.async_refresh()
 
     @callback
     def handle_notification(self, command: str, value: str) -> None:

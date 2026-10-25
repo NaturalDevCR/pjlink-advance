@@ -6,7 +6,7 @@ import asyncio
 import contextlib
 import logging
 import time
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from typing import Self
 
 from . import protocol
@@ -46,6 +46,10 @@ class PJLinkClient:
 
     All commands share one TCP session guarded by a lock, because many
     projectors accept only a single PJLink connection at a time.
+
+    With ``persistent=False`` the session is closed after every command, or at
+    the end of a :meth:`session` block, so other controllers can connect in
+    between.
     """
 
     def __init__(
@@ -57,6 +61,7 @@ class PJLinkClient:
         encoding: str = "utf-8",
         timeout: float = DEFAULT_TIMEOUT,
         max_idle: float = DEFAULT_MAX_IDLE,
+        persistent: bool = True,
     ) -> None:
         self.host = host
         self.port = port
@@ -64,6 +69,8 @@ class PJLinkClient:
         self.encoding = encoding
         self.timeout = timeout
         self.max_idle = max_idle
+        self.persistent = persistent
+        self._sessions = 0
         self._lock = asyncio.Lock()
         self._reader: asyncio.StreamReader | None = None
         self._writer: asyncio.StreamWriter | None = None
@@ -87,6 +94,24 @@ class PJLinkClient:
         """Close the session."""
         async with self._lock:
             await self._disconnect()
+
+    @contextlib.asynccontextmanager
+    async def session(self) -> AsyncIterator[Self]:
+        """Group several commands on one connection.
+
+        In non-persistent mode the connection closes when the outermost block
+        exits; in persistent mode this only groups the commands.
+        """
+        self._sessions += 1
+        try:
+            yield self
+        finally:
+            self._sessions -= 1
+            if self._should_release():
+                await self.close()
+
+    def _should_release(self) -> bool:
+        return not self.persistent and self._sessions == 0
 
     async def __aenter__(self) -> Self:
         return self
@@ -157,25 +182,29 @@ class PJLinkClient:
         """Send one command and return the response value."""
         payload = protocol.encode_command(pj_class, command, param)
         async with self._lock:
-            for attempt in range(2):
-                if (
-                    self.connected
-                    and time.monotonic() - self._last_used > self.max_idle
-                ):
+            try:
+                return await self._command(payload, pj_class, command)
+            finally:
+                if self._should_release():
                     await self._disconnect()
-                if not self.connected:
-                    await self._connect()
-                try:
-                    return await self._exchange(payload, pj_class, command)
-                except _StaleConnectionError as err:
-                    await self._disconnect()
-                    if attempt:
-                        raise PJLinkConnectionError(
-                            "Projector closed the connection"
-                        ) from err
-                except (PJLinkConnectionError, PJLinkAuthError, PJLinkProtocolError):
-                    await self._disconnect()
-                    raise
+
+    async def _command(self, payload: bytes, pj_class: int, command: str) -> str:
+        for attempt in range(2):
+            if self.connected and time.monotonic() - self._last_used > self.max_idle:
+                await self._disconnect()
+            if not self.connected:
+                await self._connect()
+            try:
+                return await self._exchange(payload, pj_class, command)
+            except _StaleConnectionError as err:
+                await self._disconnect()
+                if attempt:
+                    raise PJLinkConnectionError(
+                        "Projector closed the connection"
+                    ) from err
+            except (PJLinkConnectionError, PJLinkAuthError, PJLinkProtocolError):
+                await self._disconnect()
+                raise
         raise AssertionError("unreachable")  # pragma: no cover
 
     async def _exchange(self, payload: bytes, pj_class: int, command: str) -> str:
@@ -310,7 +339,11 @@ class PJLinkClient:
     # ------------------------------------------------------------------ bulk
 
     async def fetch_static(self) -> DeviceInfo:
-        """Read information that rarely changes."""
+        """Read information that rarely changes, on one connection."""
+        async with self.session():
+            return await self._fetch_static()
+
+    async def _fetch_static(self) -> DeviceInfo:
         pj_class = await self.get_class()
         info = DeviceInfo(
             name=await _optional(self.get_name) or "",
@@ -334,7 +367,14 @@ class PJLinkClient:
         return info
 
     async def fetch_state(self, *, full: bool, pj_class: int) -> ProjectorState:
-        """Read the current state. ``full`` adds errors, lamps and filter."""
+        """Read the current state on one connection.
+
+        ``full`` adds errors, lamps and filter.
+        """
+        async with self.session():
+            return await self._fetch_state(full=full, pj_class=pj_class)
+
+    async def _fetch_state(self, *, full: bool, pj_class: int) -> ProjectorState:
         state = ProjectorState(power=await self.get_power())
         if state.power.is_on:
             state.input = await _optional(self.get_input)
