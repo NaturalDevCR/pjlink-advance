@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator, Generator
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 import pytest
 from pjlink_advance.emulator import PJLinkEmulator
@@ -32,6 +32,17 @@ def allow_sockets(socket_enabled: None) -> None:
 def fast_search() -> Generator[None]:
     """Keep network searches short."""
     with patch("custom_components.pjlink.const.SEARCH_DURATION", 0.2):
+        yield
+
+
+@pytest.fixture
+def entity_registry_enabled_by_default() -> Generator[None]:
+    """Create entities that are disabled by default as enabled."""
+    with patch(
+        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
+        new_callable=PropertyMock,
+        return_value=True,
+    ):
         yield
 
 
