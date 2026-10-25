@@ -77,11 +77,7 @@ def parse_response(line: str, pj_class: int, command: str) -> str:
     if line == AUTH_ERROR:
         raise PJLinkAuthError("Projector rejected authentication")
     match = _RESPONSE_RE.match(line)
-    if (
-        not match
-        or match["cmd"] != command
-        or int(match["cls"]) != pj_class
-    ):
+    if not match or match["cmd"] != command or int(match["cls"]) != pj_class:
         raise PJLinkProtocolError(
             f"Unexpected response to %{pj_class}{command}: {line!r}"
         )
@@ -126,7 +122,9 @@ def decode_av_mute(value: str) -> MuteState:
 
 def decode_errors(value: str) -> ErrorStatus:
     """Decode ERST."""
-    if len(value) != len(ERROR_CATEGORIES) or any(c not in _ERROR_LEVELS for c in value):
+    if len(value) != len(ERROR_CATEGORIES) or any(
+        c not in _ERROR_LEVELS for c in value
+    ):
         raise PJLinkProtocolError(f"Invalid error status: {value!r}")
     return ErrorStatus(*(_ERROR_LEVELS[c] for c in value))
 
