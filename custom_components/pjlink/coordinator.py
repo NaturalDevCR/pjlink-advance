@@ -18,6 +18,7 @@ from pjlink_advance import (
     PJLinkClient,
     PJLinkError,
     PJLinkProtocolError,
+    PJLinkUnavailableTime,
     PJLinkUndefinedCommand,
     PowerState,
     ProjectorState,
@@ -39,6 +40,10 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 _TRANSITIONAL = (PowerState.WARMING, PowerState.COOLING)
+
+# How long a projector may answer POWR with ERR3 (busy, e.g. while it starts
+# warming up) before the coordinator reports it as unreachable.
+BUSY_GRACE = 60
 
 
 class PJLinkCoordinator(DataUpdateCoordinator[ProjectorState]):
@@ -65,6 +70,7 @@ class PJLinkCoordinator(DataUpdateCoordinator[ProjectorState]):
         self.push_active = False
         self._last_full = 0.0
         self._force_full = True
+        self._busy_since: float | None = None
 
     @property
     def pj_class(self) -> int:
@@ -131,6 +137,15 @@ class PJLinkCoordinator(DataUpdateCoordinator[ProjectorState]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
+        except PJLinkUnavailableTime as err:
+            if (busy := self._keep_while_busy(now)) is not None:
+                _LOGGER.debug("%s is busy (%s); keeping last state", self.name, err)
+                return busy
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": str(err)},
+            ) from err
         except PJLinkError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -138,12 +153,23 @@ class PJLinkCoordinator(DataUpdateCoordinator[ProjectorState]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
+        self._busy_since = None
         if full:
             self._last_full = now
             self._force_full = False
         self._merge_previous(state, full)
         self._adapt_interval(state.power)
         return state
+
+    def _keep_while_busy(self, now: float) -> ProjectorState | None:
+        """Return the last state while a busy projector is within its grace."""
+        if self._busy_since is None:
+            self._busy_since = now
+        if self.data is None or now - self._busy_since > BUSY_GRACE:
+            return None
+        # Poll quickly: a busy projector is usually changing power state.
+        self.update_interval = timedelta(seconds=TRANSITION_INTERVAL)
+        return self.data
 
     def _merge_previous(self, state: ProjectorState, full: bool) -> None:
         """Keep values the projector did not report this time."""

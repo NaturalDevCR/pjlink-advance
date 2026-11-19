@@ -147,6 +147,33 @@ async def test_keeps_values_during_err3(
     assert coordinator.data.input is not None
 
 
+async def test_power_err3_keeps_last_state(
+    hass: HomeAssistant,
+    emulator: PJLinkEmulator,
+    init_integration: MockConfigEntry,
+) -> None:
+    """A busy projector (POWR ERR3) keeps the last state for a while."""
+    coordinator = init_integration.runtime_data
+    emulator.unavailable.add("POWR")
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert coordinator.last_update_success
+    assert hass.states.get("media_player.eb_l735u").state == "off"
+    assert coordinator.update_interval == timedelta(seconds=TRANSITION_INTERVAL)
+
+    # Still busy after the grace period: report it as a failure.
+    coordinator._busy_since -= 120
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert not coordinator.last_update_success
+    assert hass.states.get("media_player.eb_l735u").state == STATE_UNAVAILABLE
+
+    emulator.unavailable.discard("POWR")
+    await coordinator.async_refresh()
+    assert coordinator.last_update_success
+    assert coordinator._busy_since is None
+
+
 async def test_close_connection_after_each_cycle(
     hass: HomeAssistant, emulator: PJLinkEmulator
 ) -> None:
