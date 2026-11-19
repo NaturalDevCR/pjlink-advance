@@ -208,3 +208,41 @@ async def test_push_port_busy_falls_back_to_polling(
         entry = await _setup(hass, emulator, **{CONF_PUSH: True})
     assert not entry.runtime_data.push_active
     await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_send_command_by_entity(
+    hass: HomeAssistant, emulator: PJLinkEmulator, init_integration: MockConfigEntry
+) -> None:
+    """The action can target any entity of the projector."""
+    response = await _send(hass, entity_id="media_player.eb_l735u", command="INF2")
+    assert response == {"response": "EB-L735U"}
+    with pytest.raises(ServiceValidationError):
+        await _send(hass, entity_id="sun.sun", command="INF2")
+    with pytest.raises(vol.Invalid):
+        await _send(hass, command="INF2")
+
+
+async def test_send_command_set_refreshes_entities(
+    hass: HomeAssistant, emulator: PJLinkEmulator, init_integration: MockConfigEntry
+) -> None:
+    """A set command refreshes entities in the background; a query does not."""
+    coordinator = init_integration.runtime_data
+    emulator.state.power = PowerState.ON
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.eb_l735u_video_mute").state == "off"
+
+    queries = len(emulator.received)
+    await _send(hass, entity_id="media_player.eb_l735u", command="AVMT")
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(emulator.received) == queries + 1
+
+    response = await _send(
+        hass, entity_id="media_player.eb_l735u", command="AVMT", parameter="31"
+    )
+    assert response == {"response": "OK"}
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get("switch.eb_l735u_video_mute").state == STATE_ON
+    assert (
+        hass.states.get("media_player.eb_l735u").attributes["is_volume_muted"] is True
+    )

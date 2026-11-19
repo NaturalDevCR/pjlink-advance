@@ -90,12 +90,63 @@ integration keeps working with polling only.
   scope. You can try `pjlink.send_command` only if the projector exposes them
   over PJLink.
 
-## Example: `pjlink.send_command`
+## Actions
+
+All actions target the projector with `entity_id` (any entity of the
+projector) or `config_entry_id`, and return a response.
+
+| Action | What it does | Response |
+|---|---|---|
+| `pjlink.send_command` | Sends a raw PJLink command. Set commands refresh the entities in the background. | `response` |
+| `pjlink.wait_ready` | Waits until the projector is fully on. With `mute: true` it mutes image and sound as soon as warm-up starts and only succeeds once the mute is confirmed. | `ok`, `power`, `muted` |
+| `pjlink.set_av_mute` | Mutes or unmutes (`target`: both, video, audio) and confirms it. Off or cooling projectors are left alone. | `ok`, `power_off`, `video_muted`, `audio_muted` |
+| `pjlink.at_media_position` | Runs `unmute`, `mute` or `power_off` when a media player reaches a playback position. | `ok`, `done`, `position`, or `natural_end` / `deferred` / `error` |
+
+Projector-side outcomes such as a timeout or a missed window are returned with
+`ok: false` instead of raising, so automations can branch on them.
+
+### Example: hide the warm-up, reveal the picture when the content starts
+
+```yaml
+- action: media_player.turn_on
+  target:
+    entity_id: media_player.projector
+- action: pjlink.wait_ready
+  data:
+    entity_id: media_player.projector
+    mute: true
+    timeout: 60
+  response_variable: ready
+- action: media_player.play_media
+  target:
+    entity_id: media_player.cast
+  data:
+    media_content_id: media-source://media_source/local/clip.mp4
+    media_content_type: video
+- action: pjlink.at_media_position
+  data:
+    entity_id: media_player.projector
+    media_player: media_player.cast
+    position: 4.0          # where the content starts
+    command: unmute
+    lead: 0.25             # open the shutter slightly early
+    late_tolerance: 0.75   # never reveal mid-scene
+    content_id_contains: clip.mp4
+  response_variable: opened
+```
+
+`at_media_position` extrapolates the position from the media player's
+`media_position` and `media_position_updated_at` attributes, waits until the
+target, and re-checks whenever the player changes (pause, seek, new content).
+Its accuracy depends on how promptly the media player integration reports
+playback changes.
+
+### Example: `pjlink.send_command`
 
 ```yaml
 action: pjlink.send_command
 data:
-  config_entry_id: 0123456789abcdef
+  entity_id: media_player.projector
   command: SVER
   pj_class: 2
 response_variable: answer

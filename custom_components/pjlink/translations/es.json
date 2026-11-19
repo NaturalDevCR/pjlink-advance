@@ -211,6 +211,9 @@
     },
     "unknown_source": {
       "message": "Fuente desconocida {source}. Disponibles: {sources}."
+    },
+    "entity_not_pjlink": {
+      "message": "{entity_id} no es una entidad PJLink."
     }
   },
   "issues": {
@@ -244,9 +247,13 @@
       "name": "Enviar comando",
       "description": "Envía un comando PJLink directo y devuelve la respuesta del proyector.",
       "fields": {
+        "entity_id": {
+          "name": "Entidad del proyector",
+          "description": "Cualquier entidad del proyector. Usa esto o la entrada de configuración."
+        },
         "config_entry_id": {
           "name": "Proyector",
-          "description": "El proyector PJLink al que se envía el comando."
+          "description": "La entrada de configuración del proyector PJLink. Usa esto o una entidad del proyector."
         },
         "command": {
           "name": "Comando",
@@ -260,6 +267,112 @@
           "name": "Clase",
           "description": "Clase PJLink del comando (1 o 2)."
         }
+      }
+    },
+    "wait_ready": {
+      "name": "Esperar a que esté listo",
+      "description": "Espera a que el proyector esté totalmente encendido. Opcionalmente silencia imagen y sonido en cuanto empieza a calentar. Devuelve ok, power y muted.",
+      "fields": {
+        "entity_id": {
+          "name": "Entidad del proyector",
+          "description": "Cualquier entidad del proyector. Usa esto o la entrada de configuración."
+        },
+        "config_entry_id": {
+          "name": "Proyector",
+          "description": "La entrada de configuración del proyector PJLink. Usa esto o una entidad del proyector."
+        },
+        "mute": {
+          "name": "Silenciar durante el calentamiento",
+          "description": "Silencia imagen y sonido en cuanto el proyector calienta, y solo termina bien cuando el silencio está confirmado."
+        },
+        "timeout": {
+          "name": "Tiempo máximo",
+          "description": "Tiempo máximo de espera."
+        }
+      }
+    },
+    "set_av_mute": {
+      "name": "Silenciar A/V",
+      "description": "Silencia o quita el silencio y lo confirma. Si el proyector está apagado o enfriando no hace nada y devuelve power_off.",
+      "fields": {
+        "entity_id": {
+          "name": "Entidad del proyector",
+          "description": "Cualquier entidad del proyector. Usa esto o la entrada de configuración."
+        },
+        "config_entry_id": {
+          "name": "Proyector",
+          "description": "La entrada de configuración del proyector PJLink. Usa esto o una entidad del proyector."
+        },
+        "mute": {
+          "name": "Silenciar",
+          "description": "Activado para silenciar, desactivado para quitar el silencio."
+        },
+        "target": {
+          "name": "Qué silenciar",
+          "description": "Imagen, sonido o ambos."
+        }
+      }
+    },
+    "at_media_position": {
+      "name": "Ejecutar en una posición del medio",
+      "description": "Ejecuta un comando del proyector cuando un reproductor llega a una posición, por ejemplo quitar el silencio al empezar el contenido de un clip o apagar al terminar.",
+      "fields": {
+        "entity_id": {
+          "name": "Entidad del proyector",
+          "description": "Cualquier entidad del proyector. Usa esto o la entrada de configuración."
+        },
+        "config_entry_id": {
+          "name": "Proyector",
+          "description": "La entrada de configuración del proyector PJLink. Usa esto o una entidad del proyector."
+        },
+        "media_player": {
+          "name": "Reproductor",
+          "description": "El reproductor cuya posición se vigila."
+        },
+        "position": {
+          "name": "Posición",
+          "description": "Posición de reproducción en segundos."
+        },
+        "command": {
+          "name": "Comando",
+          "description": "Qué hacer al llegar a la posición."
+        },
+        "lead": {
+          "name": "Adelanto",
+          "description": "Ejecuta el comando estos segundos antes."
+        },
+        "late_tolerance": {
+          "name": "Tolerancia de retraso",
+          "description": "No ejecuta el comando si la posición ya pasó por más de este margen. Vacío lo ejecuta aunque llegue tarde."
+        },
+        "content_id_contains": {
+          "name": "El ID del contenido contiene",
+          "description": "Solo sigue medios cuyo ID contiene este texto. Falla si el contenido se reemplaza."
+        },
+        "expected_duration": {
+          "name": "Duración esperada",
+          "description": "Falla si la duración del medio difiere más de 0,5 s."
+        },
+        "timeout": {
+          "name": "Tiempo máximo",
+          "description": "Tiempo máximo de espera; al agotarse el resultado indica deferred."
+        }
+      }
+    }
+  },
+  "selector": {
+    "mute_target": {
+      "options": {
+        "both": "Imagen y sonido",
+        "video": "Imagen",
+        "audio": "Sonido"
+      }
+    },
+    "media_command": {
+      "options": {
+        "unmute": "Quitar silencio de imagen y sonido",
+        "mute": "Silenciar imagen y sonido",
+        "power_off": "Apagar"
       }
     }
   }

@@ -1,7 +1,10 @@
 send_command:
   fields:
+    entity_id:
+      selector:
+        entity:
+          integration: pjlink
     config_entry_id:
-      required: true
       selector:
         config_entry:
           integration: pjlink
@@ -22,3 +25,114 @@ send_command:
           options:
             - "1"
             - "2"
+
+wait_ready:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: pjlink
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: pjlink
+    mute:
+      default: false
+      selector:
+        boolean:
+    timeout:
+      default: 45
+      selector:
+        number:
+          min: 1
+          max: 300
+          unit_of_measurement: s
+
+set_av_mute:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: pjlink
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: pjlink
+    mute:
+      required: true
+      selector:
+        boolean:
+    target:
+      default: both
+      selector:
+        select:
+          translation_key: mute_target
+          options:
+            - both
+            - video
+            - audio
+
+at_media_position:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: pjlink
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: pjlink
+    media_player:
+      required: true
+      selector:
+        entity:
+          domain: media_player
+    position:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 86400
+          step: 0.01
+          unit_of_measurement: s
+    command:
+      required: true
+      selector:
+        select:
+          translation_key: media_command
+          options:
+            - unmute
+            - mute
+            - power_off
+    lead:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 10
+          step: 0.05
+          unit_of_measurement: s
+    late_tolerance:
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 0.05
+          unit_of_measurement: s
+    content_id_contains:
+      selector:
+        text:
+    expected_duration:
+      selector:
+        number:
+          min: 0
+          max: 86400
+          step: 0.01
+          unit_of_measurement: s
+    timeout:
+      default: 60
+      selector:
+        number:
+          min: 1
+          max: 7200
+          unit_of_measurement: s

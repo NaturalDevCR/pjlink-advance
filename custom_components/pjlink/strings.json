@@ -211,6 +211,9 @@
     },
     "unknown_source": {
       "message": "Unknown source {source}. Available: {sources}."
+    },
+    "entity_not_pjlink": {
+      "message": "{entity_id} is not a PJLink entity."
     }
   },
   "issues": {
@@ -244,9 +247,13 @@
       "name": "Send command",
       "description": "Sends a raw PJLink command and returns the projector's answer.",
       "fields": {
+        "entity_id": {
+          "name": "Projector entity",
+          "description": "Any entity of the projector. Use this or the projector config entry."
+        },
         "config_entry_id": {
           "name": "Projector",
-          "description": "The PJLink projector to send the command to."
+          "description": "The PJLink projector config entry. Use this or an entity of the projector."
         },
         "command": {
           "name": "Command",
@@ -260,6 +267,112 @@
           "name": "Class",
           "description": "PJLink class of the command (1 or 2)."
         }
+      }
+    },
+    "wait_ready": {
+      "name": "Wait until ready",
+      "description": "Waits until the projector is fully on. Optionally mutes image and sound as soon as it starts warming up. Returns ok, power and muted.",
+      "fields": {
+        "entity_id": {
+          "name": "Projector entity",
+          "description": "Any entity of the projector. Use this or the projector config entry."
+        },
+        "config_entry_id": {
+          "name": "Projector",
+          "description": "The PJLink projector config entry. Use this or an entity of the projector."
+        },
+        "mute": {
+          "name": "Mute while warming up",
+          "description": "Mute image and sound as soon as the projector warms up, and only succeed once the mute is confirmed."
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "Maximum time to wait."
+        }
+      }
+    },
+    "set_av_mute": {
+      "name": "Set A/V mute",
+      "description": "Mutes or unmutes and confirms it. Projectors that are off or cooling down are left alone and report power_off.",
+      "fields": {
+        "entity_id": {
+          "name": "Projector entity",
+          "description": "Any entity of the projector. Use this or the projector config entry."
+        },
+        "config_entry_id": {
+          "name": "Projector",
+          "description": "The PJLink projector config entry. Use this or an entity of the projector."
+        },
+        "mute": {
+          "name": "Mute",
+          "description": "On to mute, off to unmute."
+        },
+        "target": {
+          "name": "Target",
+          "description": "What to mute."
+        }
+      }
+    },
+    "at_media_position": {
+      "name": "Run at media position",
+      "description": "Runs a projector command when a media player reaches a playback position, e.g. unmute when a clip's content starts or power off when it ends.",
+      "fields": {
+        "entity_id": {
+          "name": "Projector entity",
+          "description": "Any entity of the projector. Use this or the projector config entry."
+        },
+        "config_entry_id": {
+          "name": "Projector",
+          "description": "The PJLink projector config entry. Use this or an entity of the projector."
+        },
+        "media_player": {
+          "name": "Media player",
+          "description": "The media player whose playback position is watched."
+        },
+        "position": {
+          "name": "Position",
+          "description": "Playback position in seconds."
+        },
+        "command": {
+          "name": "Command",
+          "description": "What to do when the position is reached."
+        },
+        "lead": {
+          "name": "Lead time",
+          "description": "Run the command this many seconds early."
+        },
+        "late_tolerance": {
+          "name": "Late tolerance",
+          "description": "Give up instead of running the command if the position is already this far past. Empty runs it however late."
+        },
+        "content_id_contains": {
+          "name": "Content ID contains",
+          "description": "Only follow media whose content ID contains this text. Fails if the content is replaced."
+        },
+        "expected_duration": {
+          "name": "Expected duration",
+          "description": "Fail if the media duration differs by more than 0.5 s."
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "Maximum time to wait; the result reports deferred when it runs out."
+        }
+      }
+    }
+  },
+  "selector": {
+    "mute_target": {
+      "options": {
+        "both": "Image and sound",
+        "video": "Image",
+        "audio": "Sound"
+      }
+    },
+    "media_command": {
+      "options": {
+        "unmute": "Unmute image and sound",
+        "mute": "Mute image and sound",
+        "power_off": "Turn off"
       }
     }
   }
