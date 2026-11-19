@@ -25,7 +25,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from pjlink_advance import InputSource, InputType, PowerState
 from pjlink_advance.emulator import PJLinkEmulator
@@ -139,3 +139,25 @@ async def test_class1_sources_and_features(hass: HomeAssistant) -> None:
             & MediaPlayerEntityFeature.VOLUME_STEP
         )
         await hass.config_entries.async_unload(entry.entry_id)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_select_core_style_source_name(
+    hass: HomeAssistant, emulator: PJLinkEmulator
+) -> None:
+    """Automations written for the core integration ("DIGITAL 2") still work."""
+    await _call(hass, SERVICE_TURN_ON)
+    await _call(hass, SERVICE_SELECT_SOURCE, **{ATTR_INPUT_SOURCE: "DIGITAL 2"})
+    assert emulator.state.input == InputSource(InputType.DIGITAL, "2")
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE] == "HDMI2"
+    await _call(hass, SERVICE_SELECT_SOURCE, **{ATTR_INPUT_SOURCE: "digital 1"})
+    assert emulator.state.input == InputSource(InputType.DIGITAL, "1")
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("source", ["HDMI9", "DIGITAL 9", "VIDEO 1", "nonsense"])
+async def test_select_unknown_source(hass: HomeAssistant, source: str) -> None:
+    """Unknown sources are rejected with a clear error."""
+    await _call(hass, SERVICE_TURN_ON)
+    with pytest.raises(ServiceValidationError):
+        await _call(hass, SERVICE_SELECT_SOURCE, **{ATTR_INPUT_SOURCE: source})

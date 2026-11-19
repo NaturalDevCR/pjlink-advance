@@ -21,3 +21,5 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: lib/dist
+          # Integration-only releases reuse the published library version.
+          skip-existing: true

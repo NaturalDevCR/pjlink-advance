@@ -19,6 +19,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import (
@@ -26,7 +27,7 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from pjlink_advance import DeviceInfo, InputSource, MuteTarget
+from pjlink_advance import DeviceInfo, InputSource, InputType, MuteTarget
 
 from .const import CONF_ENCODING, DEFAULT_ENCODING, DEFAULT_PORT, DOMAIN
 from .coordinator import PJLinkCoordinator
@@ -105,6 +106,19 @@ def source_names(device: DeviceInfo) -> dict[str, InputSource]:
     return names
 
 
+def legacy_source(name: str) -> InputSource | None:
+    """Parse a core-style source name such as ``DIGITAL 2``.
+
+    The core integration named sources ``<TYPE> <index>``; automations written
+    for it keep working even when Class 2 input names are shown instead.
+    """
+    kind, _, index = name.strip().upper().partition(" ")
+    try:
+        return InputSource(InputType[kind], index)
+    except KeyError, ValueError:
+        return None
+
+
 class PJLinkMediaPlayer(PJLinkEntity, MediaPlayerEntity):
     """The projector as a media player."""
 
@@ -174,10 +188,18 @@ class PJLinkMediaPlayer(PJLinkEntity, MediaPlayerEntity):
         )
 
     async def async_select_source(self, source: str) -> None:
-        """Select an input."""
-        await self.coordinator.async_command(
-            self.coordinator.client.set_input, self._sources[source]
-        )
+        """Select an input by display name or core-style name (``DIGITAL 2``)."""
+        target = self._sources.get(source) or legacy_source(source)
+        if target is None or target not in self.coordinator.device.inputs:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_source",
+                translation_placeholders={
+                    "source": source,
+                    "sources": ", ".join(self._sources),
+                },
+            )
+        await self.coordinator.async_command(self.coordinator.client.set_input, target)
 
     async def async_volume_up(self) -> None:
         """Raise the speaker volume one step."""

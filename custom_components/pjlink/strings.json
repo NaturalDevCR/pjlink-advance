@@ -208,6 +208,9 @@
     },
     "entry_not_loaded": {
       "message": "{name} is not loaded."
+    },
+    "unknown_source": {
+      "message": "Unknown source {source}. Available: {sources}."
     }
   },
   "issues": {
